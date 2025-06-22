@@ -6,7 +6,6 @@ var GRID_SIZE := 200
 const HEX_TILE_BASE = preload("res://resources/blend_files/hex_tile_base.blend")
 const TILE_SIZE := 2.0
 
-
 enum HEX_STATUS {
 	EMPTY,
 	FULL,
@@ -18,22 +17,28 @@ enum HEX_TYPE {
 
 var MAP = {
 	"tiles": {},
-	"chunks": {},
-	"type": 0
 }
 
-var SCENE_FOR_TILE_TYPE = {
+const SCENE_FOR_TILE_TYPE = {
 	HEX_TYPE.BASE: HEX_TILE_BASE,
 }
+
+# Graph
+var graph: Graph
+
+# Hexagonal grid helper
+var hex_grid: HexGrid
 
 @export var CHUNK_SIZE := 30
 
 func _ready() -> void:
+	graph = Graph.new()
+	hex_grid = HexGrid.new()
 	_generate_chunk()
 	_move_grid_to_center()
-	
+	_build_graph()
 
-func _process_tile(noise_value: float) -> Dictionary:
+func _process_tile(_noise_value: float) -> Dictionary:
 	var _type
 	var _color
 	var _status
@@ -86,6 +91,7 @@ func _generate_chunk():
 			var _position = Vector3(tile_x, tile_z, tile_y)
 
 			MAP["tiles"][str(_coord)] = {
+				"coord": _coord,
 				"position": _position,
 				"tile": tile,
 				"status": _status,
@@ -115,17 +121,17 @@ func _generate_chunk():
 				tile,
 				'scale',
 				Vector3(original_scale.x, 1.5, original_scale.z),
-				0.0
+				0.1
 			)
 			tween.set_ease(Tween.EASE_OUT_IN)
 			tween.tween_property(
 				tile,
 				'scale',
 				original_scale,
-				0.0,
+				0.1,
 			)
 					
-			#await get_tree().create_timer(0.0001).timeout
+			await get_tree().create_timer(0.0001).timeout
 
 
 func _move_grid_to_center():
@@ -138,84 +144,14 @@ func _move_grid_to_center():
 		MAP["tiles"][tile]["position"] -= Vector3(size_x / 2, 0, size_y / 2)
 	
 
-func _get_noise():
-	var noise = FastNoiseLite.new()
-	noise.seed = randi()
-	noise.frequency = 0.1
-	noise.noise_type = FastNoiseLite.TYPE_PERLIN
-	return noise.get_image(GRID_SIZE, GRID_SIZE)
-
-
-func get_neighbors(x: int, y: int) -> Array:
-	var neighbors = []
-	var deltas;
-	if y % 2 == 0:
-    	# Para filas pares (sin desplazamiento)
-		deltas = [
-            Vector2(-1, -1), # NW
-            Vector2(0, -1), # NE
-            Vector2(1, 0), # E
-            Vector2(0, 1), # SE
-            Vector2(-1, 1), # SW
-            Vector2(-1, 0) # W
-		]
-	else:
-		# Para filas impares (desplazadas a la derecha)
-		deltas = [
-            Vector2(0, -1), # NW
-            Vector2(1, -1), # NE
-            Vector2(1, 0), # E
-            Vector2(1, 1), # SE
-            Vector2(0, 1), # SW
-            Vector2(-1, 0) # W
-			]
-			
-	for delta in deltas:
-		neighbors.append(Vector2(x + int(delta.x), y + int(delta.y)))
-	return neighbors
-	
-
-func _get_neighbors_when_type(type: HEX_TYPE, coord: Vector2) -> Array:
-	var neighbors_coords = get_neighbors(int(coord.x), int(coord.y))
-	var neighbors_tiles = []
-	for neighbor in neighbors_coords:
-		var key = str(neighbor)
-		if MAP["tiles"].has(key):
-			var tile = MAP["tiles"][key]
-			if tile["type"] == type:
-				neighbors_tiles.append(tile)
-	return neighbors_tiles
-
-
-func BFS(start_coord: Vector2, type: HEX_TYPE) -> Array:
-	var visited = {} # finished
-	var stack = [start_coord] # pending
-	var forest_tiles = [] # result
-
-	while stack.size() > 0:
-		var current = stack.pop_back()
-		var key = str(current)
-		
-		if visited.has(key):
-			continue
-		visited[key] = true
-		
-		# Verifica que exista el tile en el MAP
-		if MAP["tiles"].has(key):
-			var tile = MAP["tiles"][key]
-			
-			# Solo procesamos si es de tipo forest
-			if tile["type"] == type:
-				forest_tiles.append(current)
-				
-				# Recorre los vecinos del tile actual
-				for neighbor in get_neighbors(current.x, current.y):
-					var neighbor_key = str(neighbor)
-					# Verifica que el vecino no haya sido procesado y exista en el mapa
-					if not visited.has(neighbor_key) and MAP["tiles"].has(neighbor_key):
-						# Solo agrega a la pila si es de tipo forest
-						if MAP["tiles"][neighbor_key]["type"] == type:
-							stack.append(neighbor)
-			# Si el tile no es forest, lo omitimos y no seguimos la búsqueda desde él.
-	
-	return forest_tiles
+func _build_graph() -> void:
+	# Construye grafo con nodos y aristas a partir de MAP["tiles"]
+	for key in MAP["tiles"].keys():
+		var tile_info = MAP["tiles"][key]
+		graph.add_node(key, tile_info)
+	for key in MAP["tiles"].keys():
+		var coord = MAP["tiles"][key]["coord"]
+		for neighbor in hex_grid.get_neighbors(coord):
+			var neighbor_key = str(neighbor)
+			if MAP["tiles"].has(neighbor_key):
+				graph.add_edge(key, neighbor_key)

@@ -1,5 +1,4 @@
 extends Node
-
 class_name Graph
 
 # Diccionario que contiene los nodos.
@@ -123,3 +122,56 @@ func get_shortest_path(start_node, target_node) -> Array:
 		return [] # No hay camino
 	
 	return path
+
+# Obtiene los datos (info completa) de un nodo/tile por su ID (clave).
+func get_node_data(node_id) -> Dictionary:
+	if nodes.has(node_id):
+		return nodes[node_id]["data"]
+	return {}
+
+# Obtiene el tipo de tile de un nodo.
+func get_tile_type(node_id) -> int:
+	var data = get_node_data(node_id)
+	return data["type"] if data.has("type") else null
+
+# Obtiene la información de vecinos (IDs) de un nodo.
+func get_neighbors_ids(node_id) -> Array:
+	return nodes[node_id]["neighbors"] if nodes.has(node_id) else []
+
+# Obtiene datos completos de los vecinos de un nodo.
+func get_neighbors_data(node_id) -> Array:
+	var result = []
+	for neighbor_id in get_neighbors_ids(node_id):
+		result.append(get_node_data(neighbor_id))
+	return result
+
+# Encuentra el camino más corto (IDS) entre dos nodos.
+func find_shortest_path(start_id, target_id) -> Array:
+	return get_shortest_path(start_id, target_id)
+
+# Obtiene vecinos de cierto tipo (IDs) para un nodo dado.
+func get_neighbors_by_type(node_id, tile_type) -> Array:
+	var result_ids = []
+	for neighbor_id in get_neighbors_ids(node_id):
+		var data = get_node_data(neighbor_id)
+		if data.has("type") and data["type"] == tile_type:
+			result_ids.append(neighbor_id)
+	return result_ids
+
+# Realiza BFS filtrando por tipo de tile. Retorna array de node_ids.
+func bfs_by_type(start_id, tile_type) -> Array:
+	var visited = {}
+	var queue = [start_id]
+	var result = []
+	while queue.size() > 0:
+		var current = queue.pop_front()
+		if visited.has(current):
+			continue
+		visited[current] = true
+		var data = get_node_data(current)
+		if data.has("type") and data["type"] == tile_type:
+			result.append(current)
+			for neighbor_id in get_neighbors_ids(current):
+				if not visited.has(neighbor_id):
+					queue.append(neighbor_id)
+	return result
