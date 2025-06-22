@@ -1,7 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://c6rjw5pi7443m"]
+[gd_scene load_steps=7 format=3 uid="uid://c6rjw5pi7443m"]
 
-[ext_resource type="Script" uid="uid://btagoyn2km6es" path="res://generate_map.gd" id="1_ig7tw"]
+[ext_resource type="Script" uid="uid://btagoyn2km6es" path="res://scripts/generate_map.gd" id="1_ig7tw"]
 [ext_resource type="Script" uid="uid://hbjc46xsowy7" path="res://scripts/fps.gd" id="2_0xm2m"]
+[ext_resource type="Script" uid="uid://dp2b2wnsb5isx" path="res://scripts/graph.gd" id="2_h2yge"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_0xm2m"]
 sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
@@ -30,6 +31,7 @@ shadow_enabled = true
 transform = Transform3D(1, 0, 0, 0, 0.794711, 0.606988, 0, -0.606988, 0.794711, 0, 22.0929, 33.5136)
 
 [node name="Grid" type="Node3D" parent="."]
+script = ExtResource("2_h2yge")
 
 [node name="Control" type="Control" parent="."]
 layout_mode = 3
