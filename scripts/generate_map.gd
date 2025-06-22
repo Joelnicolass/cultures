@@ -48,7 +48,7 @@ func _process_tile(_noise_value: float) -> Dictionary:
 		_status = HEX_STATUS.EMPTY
 		_type = HEX_TYPE.BASE
 		_color = Color(1.0, 1.0, 0.0)
-		_scale = Vector3(1.0, randf_range(10.0, 20.5), 1.0)
+		_scale = Vector3(1.0, 1.0, 1.0)
 	
 	return {
 		"status": _status,
