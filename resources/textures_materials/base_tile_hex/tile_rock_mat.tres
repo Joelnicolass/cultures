@@ -1,0 +1,16 @@
+[gd_resource type="StandardMaterial3D" load_steps=4 format=3 uid="uid://s8a15gh5i177"]
+
+[ext_resource type="Texture2D" uid="uid://dc1v712cosml8" path="res://resources/blend_files/hex_tile_rock_Layered_Rock_vl0fdhdo_1K_BaseColor.jpg" id="1_u6rgi"]
+[ext_resource type="Texture2D" uid="uid://blm8wtgafjpoj" path="res://resources/blend_files/hex_tile_rock_Layered_Rock_vl0fdhdo_1K_Roughness.jpg" id="2_fwfhj"]
+[ext_resource type="Texture2D" uid="uid://8vfoq8aq2dx" path="res://resources/blend_files/hex_tile_rock_Layered_Rock_vl0fdhdo_1K_Normal.jpg" id="3_nnrjy"]
+
+[resource]
+resource_name = "tile_rock_mat"
+cull_mode = 2
+albedo_texture = ExtResource("1_u6rgi")
+metallic_texture = ExtResource("2_fwfhj")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("2_fwfhj")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_texture = ExtResource("3_nnrjy")

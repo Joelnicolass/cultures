@@ -4,6 +4,12 @@ extends Node3D
 
 var GRID_SIZE := 200
 const HEX_TILE_BASE = preload("res://resources/blend_files/hex_tile_base.blend")
+const HEX_TILE_GRASS = preload("res://resources/blend_files/hex_tile_grass.blend")
+const HEX_TILE_MOUNTAIN = preload("res://resources/blend_files/hex_tile_rock.blend")
+const HEX_TILE_DESERT = preload("res://resources/blend_files/hex_tile_desert.blend")
+const HEX_TILE_FOREST = preload("res://resources/blend_files/hex_tile_forest.blend")
+const HEX_TILE_WATER = preload("res://resources/blend_files/hex_tile_water.blend")
+
 const TILE_SIZE := 2.0
 
 enum HEX_STATUS {
@@ -11,8 +17,18 @@ enum HEX_STATUS {
 	FULL,
 }
 
-enum HEX_TYPE {
+enum BIOME_TYPE {
 	BASE,
+	# terreno de bosuqe
+	FOREST,
+	# terreno de montaña
+	MOUNTAIN,
+	# terreno de agua
+	WATER,
+	# terreno de desierto
+	DESERT,
+	# terreno de pastizal
+	GRASS,
 }
 
 var MAP = {
@@ -20,7 +36,12 @@ var MAP = {
 }
 
 const SCENE_FOR_TILE_TYPE = {
-	HEX_TYPE.BASE: HEX_TILE_BASE,
+	BIOME_TYPE.BASE: HEX_TILE_BASE,
+	BIOME_TYPE.GRASS: HEX_TILE_GRASS,
+	BIOME_TYPE.MOUNTAIN: HEX_TILE_MOUNTAIN,
+	BIOME_TYPE.DESERT: HEX_TILE_DESERT,
+	BIOME_TYPE.FOREST: HEX_TILE_FOREST,
+	BIOME_TYPE.WATER: HEX_TILE_WATER,
 }
 
 # Graph
@@ -44,10 +65,35 @@ func _process_tile(_noise_value: float) -> Dictionary:
 	var _status
 	var _scale
 
-	if true:
+	if _noise_value < 0.1:
 		_status = HEX_STATUS.EMPTY
-		_type = HEX_TYPE.BASE
+		_type = BIOME_TYPE.BASE
 		_color = Color(1.0, 1.0, 0.0)
+		_scale = Vector3(1.0, 1.0, 1.0)
+	elif _noise_value < 0.5:
+		_status = HEX_STATUS.EMPTY
+		_type = BIOME_TYPE.GRASS
+		_color = Color(0.0, 1.0, 0.0)
+		_scale = Vector3(1.0, 1.0, 1.0)
+	elif _noise_value < 0.6:
+		_status = HEX_STATUS.EMPTY
+		_type = BIOME_TYPE.MOUNTAIN
+		_color = Color(0.5, 0.5, 0.5)
+		_scale = Vector3(1.0, 1.0, 1.0)
+	elif _noise_value < 0.7:
+		_status = HEX_STATUS.EMPTY
+		_type = BIOME_TYPE.DESERT
+		_color = Color(1.0, 0.8, 0.0)
+		_scale = Vector3(1.0, 1.0, 1.0)
+	elif _noise_value < 0.8:
+		_status = HEX_STATUS.EMPTY
+		_type = BIOME_TYPE.FOREST
+		_color = Color(0.0, 0.5, 0.0)
+		_scale = Vector3(1.0, 1.0, 1.0)
+	else:
+		_status = HEX_STATUS.EMPTY
+		_type = BIOME_TYPE.WATER
+		_color = Color(0.0, 0.0, 1.0)
 		_scale = Vector3(1.0, 1.0, 1.0)
 	
 	return {

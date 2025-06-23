@@ -1,8 +1,8 @@
 [gd_resource type="StandardMaterial3D" load_steps=4 format=3 uid="uid://c6e07nxvg54x1"]
 
-[ext_resource type="Texture2D" uid="uid://ba8m42k01kcpm" path="res://resources/blend_files/hex_tile_base_Black_Galaxy_Granite_thflcb3v_1K_BaseColor.jpg" id="1_xrcyx"]
-[ext_resource type="Texture2D" uid="uid://bvycawht30otp" path="res://resources/blend_files/hex_tile_base_Black_Galaxy_Granite_thflcb3v_1K_Roughness.jpg" id="2_o2seo"]
-[ext_resource type="Texture2D" uid="uid://u5afby3tgdyt" path="res://resources/blend_files/hex_tile_base_Black_Galaxy_Granite_thflcb3v_1K_Normal.jpg" id="3_par7x"]
+[ext_resource type="Texture2D" uid="uid://bx0ptdju6435i" path="res://resources/blend_files/hex_tile_water_Black_Galaxy_Granite_thflcb3v_1K_BaseColor.jpg" id="1_xrcyx"]
+[ext_resource type="Texture2D" uid="uid://dsx1toac4sdvy" path="res://resources/blend_files/hex_tile_water_Black_Galaxy_Granite_thflcb3v_1K_Roughness.jpg" id="2_o2seo"]
+[ext_resource type="Texture2D" uid="uid://b34t3wgdm8cno" path="res://resources/blend_files/hex_tile_water_Black_Galaxy_Granite_thflcb3v_1K_Normal.jpg" id="3_par7x"]
 
 [resource]
 resource_name = "tile_mat"

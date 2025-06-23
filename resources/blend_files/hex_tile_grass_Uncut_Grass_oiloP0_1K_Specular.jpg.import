@@ -1,0 +1,37 @@
+[remap]
+
+importer="texture"
+type="CompressedTexture2D"
+uid="uid://dj0p2djhtitrs"
+path="res://.godot/imported/hex_tile_grass_Uncut_Grass_oiloP0_1K_Specular.jpg-a70780ec9dfff4913f1de1d937b78b2a.ctex"
+metadata={
+"vram_texture": false
+}
+generator_parameters={
+"md5": "7a8868006fe080a0c6bdcf18a7a45e1c"
+}
+
+[deps]
+
+source_file="res://resources/blend_files/hex_tile_grass_Uncut_Grass_oiloP0_1K_Specular.jpg"
+dest_files=["res://.godot/imported/hex_tile_grass_Uncut_Grass_oiloP0_1K_Specular.jpg-a70780ec9dfff4913f1de1d937b78b2a.ctex"]
+
+[params]
+
+compress/mode=0
+compress/high_quality=false
+compress/lossy_quality=0.7
+compress/hdr_compression=1
+compress/normal_map=0
+compress/channel_pack=0
+mipmaps/generate=true
+mipmaps/limit=-1
+roughness/mode=0
+roughness/src_normal=""
+process/fix_alpha_border=true
+process/premult_alpha=false
+process/normal_map_invert_y=false
+process/hdr_as_srgb=false
+process/hdr_clamp_exposure=false
+process/size_limit=0
+detect_3d/compress_to=1

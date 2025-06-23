@@ -1,0 +1,38 @@
+[remap]
+
+importer="texture"
+type="CompressedTexture2D"
+uid="uid://4gyqhpgec8i5"
+path.s3tc="res://.godot/imported/hex_tile_desert_Thai_Rippled_Sand_td1hcimn_1K_BaseColor.jpg-25916f07e85c53cc609462c4c164a60d.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
+generator_parameters={
+"md5": "5349dbd28d80c17c722f99b15b9fe304"
+}
+
+[deps]
+
+source_file="res://resources/blend_files/hex_tile_desert_Thai_Rippled_Sand_td1hcimn_1K_BaseColor.jpg"
+dest_files=["res://.godot/imported/hex_tile_desert_Thai_Rippled_Sand_td1hcimn_1K_BaseColor.jpg-25916f07e85c53cc609462c4c164a60d.s3tc.ctex"]
+
+[params]
+
+compress/mode=2
+compress/high_quality=false
+compress/lossy_quality=0.7
+compress/hdr_compression=1
+compress/normal_map=0
+compress/channel_pack=0
+mipmaps/generate=true
+mipmaps/limit=-1
+roughness/mode=0
+roughness/src_normal=""
+process/fix_alpha_border=true
+process/premult_alpha=false
+process/normal_map_invert_y=false
+process/hdr_as_srgb=false
+process/hdr_clamp_exposure=false
+process/size_limit=0
+detect_3d/compress_to=0
