@@ -1,13 +1,34 @@
-[gd_scene load_steps=4 format=3 uid="uid://dasm2crecigy4"]
+[gd_scene load_steps=4 format=3 uid="uid://c87apdvb4hj70"]
 
 [ext_resource type="PackedScene" uid="uid://psyo3o5qxjbt" path="res://resources/blend_files/hex_tile_forest.blend" id="1_sy8bk"]
-[ext_resource type="Script" uid="uid://dl64jhna7mrcn" path="res://scripts/tile.gd" id="1_y8wcn"]
+
+[sub_resource type="GDScript" id="GDScript_sy8bk"]
+script/source = "extends Node3D
+class_name Tile
+
+enum BIOME_TYPE {
+	BASE,
+	# terreno de bosuqe
+	FOREST,
+	# terreno de montaña
+	MOUNTAIN,
+	# terreno de agua
+	WATER,
+	# terreno de desierto
+	DESERT,
+	# terreno de pastizal
+	GRASS,
+}
+
+@export var q: int = 0
+@export var r: int = 0
+@export var type: BIOME_TYPE = BIOME_TYPE.BASE"
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_y8wcn"]
 radius = 0.982624
 
 [node name="HexForest" type="StaticBody3D"]
-script = ExtResource("1_y8wcn")
+script = SubResource("GDScript_sy8bk")
 type = 1
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]

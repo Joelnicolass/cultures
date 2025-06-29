@@ -326,7 +326,7 @@ func clear_map() -> void:
 	# Eliminar tiles existentes
 	if grid_node:
 		for child in grid_node.get_children():
-			if child is Tile or child is TileGame:
+			if child is TileGame:
 				child.queue_free()
 	
 	is_map_ready = false
@@ -500,22 +500,18 @@ func _find_tiles_recursive_internal(node: Node, tiles_array: Array) -> void:
 		if child is TileGame:
 			is_tile = true
 		
-		# Método 2: Verificar si es de la clase Tile (compatibilidad)
-		elif child is Tile:
-			is_tile = true
-		
-		# Método 3: Verificar si tiene el script tile_game.gd
+		# Método 2: Verificar si tiene el script tile_game.gd
 		elif child.get_script() != null:
 			var script_path = child.get_script().get_path()
 			if "tile_game.gd" in script_path or "tile.gd" in script_path:
 				is_tile = true
 		
-		# Método 4: Verificar si tiene las propiedades esperadas de un tile
+		# Método 3: Verificar si tiene las propiedades esperadas de un tile
 		elif child.has_method("get") and child.get("q") != null and child.get("r") != null and child.get("type") != null:
 			is_tile = true
 		
-		# Método 5: Verificar por nombre del nodo (contiene "Hex" o "Tile")
-		elif "Hex" in child.name or "Tile" in child.name:
+		# Método 4: Verificar por nombre del nodo (contiene "Hex" o "Tile")
+		elif "Tile" in child.name:
 			is_tile = true
 		
 		if is_tile:
