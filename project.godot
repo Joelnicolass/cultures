@@ -11,6 +11,6 @@ config_version=5
 [application]
 
 config/name="cultures"
-run/main_scene="uid://c6rjw5pi7443m"
+run/main_scene="uid://bwrg4bsb3pdl"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
