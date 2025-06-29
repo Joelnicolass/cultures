@@ -14,8 +14,16 @@ class_name MapManager
 
 signal map_generated(tile_count: int)
 signal map_loaded(tile_count: int)
-signal tile_clicked(tile, tile_data)
-signal tiles_found_by_type(tiles: Array, search_type)
+
+## Señales de interacción con tiles - Diseñadas para juegos de estrategia
+signal tile_selected(tile_id: String, tile_data: Dictionary, click_type: String)
+signal tile_hovered(tile_id: String, tile_data: Dictionary)
+signal tile_right_clicked(tile_id: String, tile_data: Dictionary)
+signal tile_interaction_requested(tile_id: String, tile_data: Dictionary, action_type: String)
+
+## Señales para gestión de acciones (futuro uso con edificios/unidades)
+signal action_requested(action_data: Dictionary)
+signal selection_changed(selected_tiles: Array)
 
 ## Enums compartidos
 enum MapGenerationMode {
@@ -333,8 +341,29 @@ func clear_map() -> void:
 	
 	is_map_ready = false
 
-## Maneja el clic en un tile.
-func _on_tile_clicked(tile) -> void:
+## Maneja el clic en un tile de forma genérica.
+## Solo se encarga de identificar el tile y emitir las señales apropiadas.
+## La lógica específica de qué hacer se maneja en otros scripts.
+func _on_tile_clicked(tile, click_type: String = "left_click") -> void:
+	if not is_map_ready:
+		return
+	
+	var tile_id = _find_tile_id(tile)
+	if tile_id == "":
+		push_warning("MapManager: Tile clickeado no encontrado en el mapa")
+		return
+	
+	var tile_data = map_data["tiles"][tile_id]
+	
+	# Emitir señal genérica de selección de tile
+	tile_selected.emit(tile_id, tile_data, click_type)
+	
+	# Limpiar visualizaciones anteriores (esto lo mantenemos por compatibilidad)
+	if visualizer:
+		visualizer.clear_marks()
+
+## Maneja el hover sobre un tile.
+func _on_tile_hovered(tile) -> void:
 	if not is_map_ready:
 		return
 	
@@ -343,23 +372,36 @@ func _on_tile_clicked(tile) -> void:
 		return
 	
 	var tile_data = map_data["tiles"][tile_id]
+	tile_hovered.emit(tile_id, tile_data)
+
+## Maneja el clic derecho en un tile.
+func _on_tile_right_clicked(tile) -> void:
+	if not is_map_ready:
+		return
 	
-	# Limpiar marcas anteriores
-	if visualizer:
-		visualizer.clear_marks()
+	var tile_id = _find_tile_id(tile)
+	if tile_id == "":
+		return
 	
-	# Buscar tiles del mismo tipo
-	var same_type_tiles = find_tiles_by_type(tile_data["type"])
+	var tile_data = map_data["tiles"][tile_id]
+	tile_right_clicked.emit(tile_id, tile_data, "right_click")
+
+## Solicita una acción específica en un tile.
+## Útil para cuando se quiere ejecutar una acción programática.
+func request_tile_action(tile_id: String, action_type: String, additional_data: Dictionary = {}) -> void:
+	if not map_data["tiles"].has(tile_id):
+		push_warning("MapManager: Tile ID no válido: " + tile_id)
+		return
 	
-	# Marcar tiles encontrados
-	if visualizer:
-		var tile_nodes = []
-		for found_tile_id in same_type_tiles:
-			tile_nodes.append(map_data["tiles"][found_tile_id]["node"])
-		visualizer.mark_tiles(tile_nodes, Vector3(1.0, 1.2, 1.0), true, 0.02)
+	var tile_data = map_data["tiles"][tile_id].duplicate()
+	tile_data.merge(additional_data)
 	
-	tile_clicked.emit(tile, tile_data)
-	tiles_found_by_type.emit(same_type_tiles, tile_data["type"])
+	tile_interaction_requested.emit(tile_id, tile_data, action_type)
+
+## Solicita una acción general del juego.
+## Para acciones que no están directamente relacionadas con un tile específico.
+func request_game_action(action_data: Dictionary) -> void:
+	action_requested.emit(action_data)
 
 ## Encuentra el ID de un tile en el mapa.
 ##

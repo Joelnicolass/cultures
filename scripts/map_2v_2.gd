@@ -1,44 +1,69 @@
 extends Node3D
 
-## Script refactorizado que usa el nuevo sistema de EnhancedMapManager
-## para manejar mapas hexagonales de forma más limpia y escalable.
+## Script refactorizado que usa el nuevo sistema de MapManager
+## con GameActionManager para manejar acciones estilo Civilization.
 
 @onready var GRID_NODE = get_node("Grid")
 @onready var camera = get_node("Camera3D")
 
 var map_manager: MapManager
+var game_action_manager: GameActionManager
 
 func _ready():
-	# Inicializar el EnhancedMapManager de forma dinámica
+	# Inicializar el MapManager
 	map_manager = MapManager.new()
 	add_child(map_manager)
 	
-	# Configurar para usar tiles existentes en la escena
+	# Inicializar el GameActionManager
+	game_action_manager = GameActionManager.new()
+	add_child(game_action_manager)
+	
+	# Configurar MapManager para usar tiles existentes en la escena
 	map_manager.generation_mode = map_manager.MapGenerationMode.MANUAL_PLACEMENT
 	map_manager.initialize(GRID_NODE, camera)
 	
-	# Conectar señales para recibir eventos del mapa
-	map_manager.tile_clicked.connect(_on_tile_clicked)
-	map_manager.tiles_found_by_type.connect(_on_tiles_found_by_type)
+	# Conectar GameActionManager con MapManager
+	game_action_manager.setup(map_manager)
+	
+	# Conectar señales específicas del mapa (mantener compatibilidad)
 	map_manager.map_loaded.connect(_on_map_loaded)
+	map_manager.map_generated.connect(_on_map_generated)
+	
+	# Conectar señales del GameActionManager para monitorear acciones
+	game_action_manager.tile_selection_changed.connect(_on_tile_selection_changed)
+	game_action_manager.game_state_changed.connect(_on_game_state_changed)
+	game_action_manager.action_executed.connect(_on_action_executed)
 	
 	# Generar/cargar el mapa
-	map_manager.generate_map()
+	await map_manager.generate_map()
+	
+	print("=== SISTEMA INICIALIZADO ===")
+	print("MapManager y GameActionManager configurados")
+	print("Modo de juego inicial: ", game_action_manager.current_game_mode)
 
-## Maneja cuando se hace clic en un tile
-func _on_tile_clicked(tile, tile_data) -> void:
-	print("Clicked on Tile: ", tile.name)
-	print("Tile type: ", tile_data.type)
-	print("Tile coord: ", tile_data.coord)
+## Maneja cuando se selecciona un tile (nueva funcionalidad)
+func _on_tile_selection_changed(tile_id: String, tile_data: Dictionary) -> void:
+	print("=== TILE SELECCIONADO ===")
+	print("ID: ", tile_id)
+	print("Tipo: ", tile_data.get("type", "unknown"))
+	print("Posición: ", tile_data.get("position", Vector3.ZERO))
+	print("Modo de juego actual: ", game_action_manager.current_game_mode)
 
-## Maneja cuando se encuentran tiles del mismo tipo
-func _on_tiles_found_by_type(tile_ids: Array, search_type) -> void:
-	print("Found ", tile_ids.size(), " tiles of type ", search_type)
-	for tile_id in tile_ids:
-		var tile_data = map_manager.get_tile_data(tile_id)
-		print("  - ", tile_id, " at ", tile_data.coord)
+## Maneja cambios en el estado del juego
+func _on_game_state_changed(new_state: Dictionary) -> void:
+	print("=== ESTADO DEL JUEGO ACTUALIZADO ===")
+	print("Modo: ", new_state.get("game_mode", "unknown"))
+	print("Turno: ", new_state.get("turn", 0))
+	print("Jugador: ", new_state.get("player", 0))
+	print("Tile seleccionado: ", new_state.get("selected_tile", "none"))
 
-## Maneja cuando el mapa ha sido cargado
+## Maneja cuando se ejecuta una acción
+func _on_action_executed(action_type: String, result: Dictionary) -> void:
+	print("=== ACCIÓN EJECUTADA ===")
+	print("Tipo: ", action_type)
+	print("Resultado: ", result)
+
+## Maneja cuando el mapa ha sido cargado (compatibilidad)
 func _on_map_loaded(tile_count: int) -> void:
 	print("=== MAPA CARGADO ===")
 	print("Total tiles: ", tile_count)
@@ -47,6 +72,63 @@ func _on_map_loaded(tile_count: int) -> void:
 	var graph = map_manager.get_graph()
 	print("Grafo: ", graph.get_node_count(), " nodos, ", graph.get_edge_count(), " aristas")
 
-## Función para acceder al MapManager desde otros scripts si es necesario
-func get_map_manager() -> Node:
+## Maneja cuando el mapa ha sido generado (compatibilidad)
+func _on_map_generated(tile_count: int) -> void:
+	print("=== MAPA GENERADO ===")
+	print("Total tiles: ", tile_count)
+
+## Funciones públicas para interactuar desde UI o otros scripts
+
+## Cambia el modo de juego
+func set_game_mode(mode: GameActionManager.GameMode) -> void:
+	if game_action_manager:
+		game_action_manager.set_game_mode(mode)
+
+## Obtiene el estado actual del juego
+func get_game_state() -> Dictionary:
+	if game_action_manager:
+		return game_action_manager.get_game_state()
+	return {}
+
+## Solicita una acción específica en un tile
+func request_tile_action(tile_id: String, action: String, data: Dictionary = {}) -> void:
+	if game_action_manager:
+		game_action_manager.request_tile_action(tile_id, action, data)
+
+## Solicita una acción general del juego
+func request_game_action(action_data: Dictionary) -> void:
+	if game_action_manager:
+		game_action_manager.request_game_action(action_data)
+
+## Funciones de utilidad para acceso desde otros scripts
+
+## Acceso al MapManager para compatibilidad
+func get_map_manager() -> MapManager:
 	return map_manager
+
+## Acceso al GameActionManager
+func get_game_action_manager() -> GameActionManager:
+	return game_action_manager
+
+## Ejemplos de uso programático (para testing)
+func _input(event):
+	if event is InputEventKey and event.pressed:
+		match event.keycode:
+			KEY_1:
+				print("Cambiando a modo EXPLORACIÓN")
+				set_game_mode(GameActionManager.GameMode.EXPLORATION)
+			KEY_2:
+				print("Cambiando a modo CONSTRUCCIÓN")
+				set_game_mode(GameActionManager.GameMode.BUILDING)
+			KEY_3:
+				print("Cambiando a modo MOVIMIENTO DE UNIDADES")
+				set_game_mode(GameActionManager.GameMode.UNIT_MOVEMENT)
+			KEY_4:
+				print("Cambiando a modo COMBATE")
+				set_game_mode(GameActionManager.GameMode.COMBAT)
+			KEY_SPACE:
+				print("Estado actual del juego:")
+				print(get_game_state())
+			KEY_ENTER:
+				print("Terminando turno...")
+				request_game_action({"type": "end_turn"})
