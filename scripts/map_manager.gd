@@ -349,9 +349,9 @@ func _on_tile_clicked(tile, click_type: String = "left_click") -> void:
 	# Emitir señal genérica de selección de tile
 	tile_selected.emit(tile_id, tile_data, click_type)
 	
-	# Limpiar visualizaciones anteriores (esto lo mantenemos por compatibilidad)
+	# Limpiar visualizaciones anteriores usando el nuevo sistema
 	if visualizer:
-		visualizer.clear_marks()
+		visualizer.clear_action_states()
 
 ## Maneja el hover sobre un tile.
 func _on_tile_hovered(tile) -> void:

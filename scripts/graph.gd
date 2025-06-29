@@ -322,3 +322,98 @@ func _dfs_component(current_id, visited: Dictionary, component: Array) -> void:
 ## Limpia completamente el grafo, eliminando todos los nodos y aristas.
 func clear() -> void:
 	nodes.clear()
+
+## Obtiene todos los nodos dentro de un rango de distancia específico desde un nodo inicial.
+## Útil para sistemas de movimiento, construcción, ataques, etc. en juegos por turnos.
+##
+## @param start_node_id: ID del nodo desde donde comenzar
+## @param max_distance: Distancia máxima a considerar
+## @return: Array de Dictionary con datos de los nodos dentro del rango
+func get_nodes_within_distance(start_node_id, max_distance: int) -> Array:
+	if not nodes.has(start_node_id) or max_distance < 0:
+		return []
+	
+	var result = []
+	var visited = {}
+	var queue = []
+	
+	# Inicializar con el nodo de inicio
+	queue.append({"node_id": start_node_id, "distance": 0})
+	visited[start_node_id] = 0
+	
+	while queue.size() > 0:
+		var current_item = queue.pop_front()
+		var current_id = current_item["node_id"]
+		var current_distance = current_item["distance"]
+		
+		# Agregar el nodo actual a los resultados (incluyendo datos completos)
+		var node_data = get_node_data(current_id)
+		node_data["node_id"] = current_id
+		node_data["distance"] = current_distance
+		result.append(node_data)
+		
+		# Si hemos alcanzado la distancia máxima, no explorar más desde este nodo
+		if current_distance >= max_distance:
+			continue
+		
+		# Explorar vecinos
+		for neighbor_id in get_neighbors_ids(current_id):
+			var new_distance = current_distance + 1
+			
+			# Si no hemos visitado este vecino o encontramos un camino más corto
+			if not visited.has(neighbor_id) or visited[neighbor_id] > new_distance:
+				visited[neighbor_id] = new_distance
+				queue.append({"node_id": neighbor_id, "distance": new_distance})
+	
+	return result
+
+## Obtiene nodos dentro de un rango filtrando por un tipo específico.
+##
+## @param start_node_id: ID del nodo desde donde comenzar
+## @param max_distance: Distancia máxima a considerar
+## @param tile_type: Tipo de tile a filtrar
+## @return: Array de Dictionary con datos de los nodos del tipo especificado dentro del rango
+func get_nodes_within_distance_by_type(start_node_id, max_distance: int, tile_type) -> Array:
+	var all_nodes = get_nodes_within_distance(start_node_id, max_distance)
+	var filtered_nodes = []
+	
+	for node_data in all_nodes:
+		if node_data.has("type") and node_data["type"] == tile_type:
+			filtered_nodes.append(node_data)
+	
+	return filtered_nodes
+
+## Obtiene solo los IDs de nodos dentro de un rango (versión optimizada).
+##
+## @param start_node_id: ID del nodo desde donde comenzar
+## @param max_distance: Distancia máxima a considerar
+## @return: Array de String con los IDs de nodos dentro del rango
+func get_node_ids_within_distance(start_node_id, max_distance: int) -> Array:
+	if not nodes.has(start_node_id) or max_distance < 0:
+		return []
+	
+	var result = []
+	var visited = {}
+	var queue = []
+	
+	queue.append({"node_id": start_node_id, "distance": 0})
+	visited[start_node_id] = 0
+	
+	while queue.size() > 0:
+		var current_item = queue.pop_front()
+		var current_id = current_item["node_id"]
+		var current_distance = current_item["distance"]
+		
+		result.append(current_id)
+		
+		if current_distance >= max_distance:
+			continue
+		
+		for neighbor_id in get_neighbors_ids(current_id):
+			var new_distance = current_distance + 1
+			
+			if not visited.has(neighbor_id) or visited[neighbor_id] > new_distance:
+				visited[neighbor_id] = new_distance
+				queue.append({"node_id": neighbor_id, "distance": new_distance})
+	
+	return result

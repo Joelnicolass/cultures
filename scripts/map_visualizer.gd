@@ -1,44 +1,122 @@
 extends Node
 class_name MapVisualizer
 
-## Clase para manejar la visualización e interacción con mapas hexagonales.
+## Visualizador para mapas hexagonales en juegos estilo Civilization (4X).
 ##
-## Esta clase se encarga de:
-## - Detección de clics en tiles mediante raycast
-## - Marcado visual de tiles (escalado, colores, etc.)
-## - Manejo de estados de visualización (selección, hover, etc.)
-## - Animaciones de feedback visual
+## Gestiona la visualización e interacción con tiles del mapa, incluyendo:
+## - Selección principal de tile
+## - Estados visuales para diferentes acciones (movimiento, construcción, etc.)
+## - Hover y feedback visual
+## - Sistema escalable de estados de tiles
 ##
-## Diseñada para ser reutilizable en diferentes contextos de mapas.
+## Diseñado específicamente para juegos por turnos 4X.
 
 signal tile_clicked(tile)
 signal tile_hovered(tile)
 signal tile_unhovered(tile)
 
-## Configuración de visualización
-@export var highlight_scale: Vector3 = Vector3(1.0, 1.2, 1.0)
-@export var normal_scale: Vector3 = Vector3(1.0, 1.0, 1.0)
+## Enums para tipos de estado visual
+enum TileState {
+	NORMAL, # Estado normal
+	SELECTED, # Tile seleccionado principal
+	HOVERED, # Tile con hover
+	MOVEMENT_RANGE, # Tiles donde se puede mover
+	ATTACK_RANGE, # Tiles donde se puede atacar
+	BUILD_AVAILABLE, # Tiles donde se puede construir
+	RESOURCE_VIEW, # Tiles mostrando recursos
+	TRADE_ROUTE, # Tiles de ruta comercial
+	BORDER, # Tiles de frontera
+	INVALID_ACTION # Tiles donde no se puede realizar acción
+}
+
+## Configuración de visualización por estado
+var state_configs: Dictionary = {
+	TileState.NORMAL: {
+		"scale": Vector3(1.0, 1.0, 1.0),
+		"color_modulate": Color.WHITE,
+		"outline": false
+	},
+	TileState.SELECTED: {
+		"scale": Vector3(1.05, 1.15, 1.05),
+		"color_modulate": Color(1.2, 1.2, 0.8),
+		"outline": true,
+		"outline_color": Color.YELLOW
+	},
+	TileState.HOVERED: {
+		"scale": Vector3(1.02, 1.08, 1.02),
+		"color_modulate": Color(1.1, 1.1, 1.1),
+		"outline": false
+	},
+	TileState.MOVEMENT_RANGE: {
+		"scale": Vector3(1.0, 1.05, 1.0),
+		"color_modulate": Color(0.8, 1.2, 0.8),
+		"outline": true,
+		"outline_color": Color.GREEN
+	},
+	TileState.ATTACK_RANGE: {
+		"scale": Vector3(1.0, 1.05, 1.0),
+		"color_modulate": Color(1.2, 0.8, 0.8),
+		"outline": true,
+		"outline_color": Color.RED
+	},
+	TileState.BUILD_AVAILABLE: {
+		"scale": Vector3(1.0, 1.05, 1.0),
+		"color_modulate": Color(0.9, 0.9, 1.2),
+		"outline": true,
+		"outline_color": Color.BLUE
+	},
+	TileState.RESOURCE_VIEW: {
+		"scale": Vector3(1.0, 1.03, 1.0),
+		"color_modulate": Color(1.3, 1.1, 0.7),
+		"outline": true,
+		"outline_color": Color.ORANGE
+	},
+	TileState.TRADE_ROUTE: {
+		"scale": Vector3(1.0, 1.02, 1.0),
+		"color_modulate": Color(1.0, 1.2, 1.3),
+		"outline": true,
+		"outline_color": Color.CYAN
+	},
+	TileState.BORDER: {
+		"scale": Vector3(1.0, 1.01, 1.0),
+		"color_modulate": Color(1.1, 0.9, 1.1),
+		"outline": true,
+		"outline_color": Color.MAGENTA
+	},
+	TileState.INVALID_ACTION: {
+		"scale": Vector3(0.98, 0.95, 0.98),
+		"color_modulate": Color(0.7, 0.7, 0.7),
+		"outline": false
+	}
+}
+
+## Configuración general
 @export var animation_duration: float = 0.15
 @export var collision_mask: int = 1
 
 ## Estado interno
 var camera: Camera3D
-var marked_tiles: Array = []
-var hovered_tile = null
-var selected_tiles: Array = []
+var selected_tile: Node3D = null
+var hovered_tile: Node3D = null
+
+## Sistema de estados de tiles
+## Estructura: { tile: { state: TileState, data: Dictionary } }
+var tile_states: Dictionary = {}
+
+## Arrays de acceso rápido organizados por estado
+var tiles_by_state: Dictionary = {}
 
 ## Configuración del visualizador
-##
-## @param camera_node: Cámara para realizar raycast
 func setup(camera_node: Camera3D) -> void:
 	camera = camera_node
-	
-	# En Godot 4, manejamos la entrada directamente con _unhandled_input
-	# No necesitamos conectar señales manualmente
+	_initialize_state_arrays()
 
-## Procesa la entrada del usuario para detectar clics en tiles.
-##
-## @param event: Evento de entrada
+## Inicializa los arrays de estados
+func _initialize_state_arrays() -> void:
+	for state in TileState.values():
+		tiles_by_state[state] = []
+
+## Procesa entrada del usuario
 func _unhandled_input(event: InputEvent) -> void:
 	if not camera:
 		return
@@ -46,49 +124,37 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 			_handle_tile_click(event.position)
-			get_viewport().set_input_as_handled() # Marcar como procesado
+			get_viewport().set_input_as_handled()
 	elif event is InputEventMouseMotion:
 		_handle_tile_hover(event.position)
 
-## Maneja los clics en tiles usando raycast.
-##
-## @param mouse_position: Posición del mouse en pantalla
+## Maneja clics en tiles
 func _handle_tile_click(mouse_position: Vector2) -> void:
 	var clicked_tile = _get_tile_at_position(mouse_position)
 	if clicked_tile:
 		tile_clicked.emit(clicked_tile)
-		# marcar el tile como seleccionado
-		select_tile(clicked_tile)
+		set_selected_tile(clicked_tile)
 
-## Maneja el hover sobre tiles usando raycast.
-##
-## @param mouse_position: Posición del mouse en pantalla
+## Maneja hover sobre tiles
 func _handle_tile_hover(mouse_position: Vector2) -> void:
 	var hovered = _get_tile_at_position(mouse_position)
-
-	# Si el tile actual es el mismo que el selected, no hacer nada
-	if hovered and hovered in selected_tiles:
+	
+	# Si es el mismo tile o es un tile seleccionado, no cambiar hover
+	if hovered == hovered_tile or (hovered and hovered == selected_tile):
 		return
 	
-	# Si cambió el tile sobre el que está el mouse
-	if hovered != hovered_tile:
-		# Desmarcar tile anterior
-		if hovered_tile:
-			tile_unhovered.emit(hovered_tile)
-			# animar
-			_animate_tile_scale(hovered_tile, normal_scale)
-		
-		# Marcar nuevo tile
-		hovered_tile = hovered
-		if hovered_tile:
-			tile_hovered.emit(hovered_tile)
-			# animar
-			_animate_tile_scale(hovered_tile, highlight_scale)
+	# Limpiar hover anterior
+	if hovered_tile and hovered_tile != selected_tile:
+		_remove_tile_state(hovered_tile, TileState.HOVERED)
+		tile_unhovered.emit(hovered_tile)
+	
+	# Aplicar nuevo hover
+	hovered_tile = hovered
+	if hovered_tile and hovered_tile != selected_tile:
+		_set_tile_state(hovered_tile, TileState.HOVERED)
+		tile_hovered.emit(hovered_tile)
 
-## Obtiene el tile en una posición específica de la pantalla usando raycast.
-##
-## @param screen_position: Posición en pantalla
-## @return: Tile encontrado o null
+## Raycast para obtener tile en posición
 func _get_tile_at_position(screen_position: Vector2):
 	if not camera:
 		return null
@@ -103,175 +169,167 @@ func _get_tile_at_position(screen_position: Vector2):
 	params.collision_mask = collision_mask
 	
 	var result = space.intersect_ray(params)
-	if result and result.collider:
-		# Verificar si es un tile válido (TileGame o Tile)
-		if result.collider is TileGame:
-			return result.collider
-	
+	if result and result.collider and result.collider is TileGame:
+		return result.collider
 	return null
 
-## Marca un tile visualmente con escala aumentada.
-##
-## @param tile: Tile a marcar
-## @param scale: Escala a aplicar (opcional)
-## @param animate: Si debe animarse el cambio
-func mark_tile(tile: Node3D, scale: Vector3 = highlight_scale, animate: bool = true) -> void:
-	if not tile:
-		return
-	
-	if tile not in marked_tiles:
-		marked_tiles.append(tile)
-	
-	if animate:
-		_animate_tile_scale(tile, scale)
-	else:
-		tile.scale = scale
+## ===== GESTIÓN DE SELECCIÓN PRINCIPAL =====
 
-## Desmarca un tile específico.
-##
-## @param tile: Tile a desmarcar
-## @param animate: Si debe animarse el cambio
-func unmark_tile(tile: Node3D, animate: bool = true) -> void:
-	if not tile:
-		return
+## Establece el tile seleccionado principal
+func set_selected_tile(tile: Node3D) -> void:
+	# Limpiar selección anterior
+	if selected_tile:
+		_remove_tile_state(selected_tile, TileState.SELECTED)
 	
-	marked_tiles.erase(tile)
-	
-	if animate:
-		_animate_tile_scale(tile, normal_scale)
-	else:
-		tile.scale = normal_scale
+	# Establecer nueva selección
+	selected_tile = tile
+	if selected_tile:
+		_set_tile_state(selected_tile, TileState.SELECTED)
 
-## Marca múltiples tiles.
-##
-## @param tiles: Array de tiles a marcar
-## @param scale: Escala a aplicar
-## @param animate: Si debe animarse el cambio
-## @param cascade_delay: Delay entre animaciones (0 = todas al mismo tiempo)
-func mark_tiles(tiles: Array, scale: Vector3 = highlight_scale, animate: bool = true, cascade_delay: float = 0.0) -> void:
-	for i in range(tiles.size()):
-		var tile = tiles[i]
+## Obtiene el tile seleccionado
+func get_selected_tile() -> Node3D:
+	return selected_tile
+
+## Limpia la selección principal
+func clear_selection() -> void:
+	set_selected_tile(null)
+
+## ===== GESTIÓN DE ESTADOS DE TILES =====
+
+## Establece el estado de un tile
+func set_tile_state(tile: Node3D, state: TileState, data: Dictionary = {}) -> void:
+	_set_tile_state(tile, state, data)
+
+## Establece estados para múltiples tiles
+func set_tiles_state(tiles: Array, state: TileState, data: Dictionary = {}) -> void:
+	for tile in tiles:
 		if tile is Node3D:
-			if tile not in marked_tiles:
-				marked_tiles.append(tile)
-			
-			if animate and cascade_delay > 0:
-				# Animación en cascada
-				get_tree().create_timer(i * cascade_delay).timeout.connect(
-					func(): _animate_tile_scale(tile, scale)
-				)
-			elif animate:
-				_animate_tile_scale(tile, scale)
-			else:
-				tile.scale = scale
+			_set_tile_state(tile, state, data)
 
-## Desmarca todos los tiles marcados.
-##
-## @param animate: Si debe animarse el cambio
-func clear_marks(animate: bool = true) -> void:
-	for tile in marked_tiles:
-		if tile and is_instance_valid(tile):
-			if animate:
-				_animate_tile_scale(tile, normal_scale)
-			else:
-				tile.scale = normal_scale
-	
-	marked_tiles.clear()
+## Remueve un estado específico de un tile
+func remove_tile_state(tile: Node3D, state: TileState) -> void:
+	_remove_tile_state(tile, state)
 
-## Anima la escala de un tile.
-##
-## @param tile: Tile a animar
-## @param target_scale: Escala objetivo
-func _animate_tile_scale(tile: Node3D, target_scale: Vector3) -> void:
-	if not tile.get_tree():
+## Remueve un estado de múltiples tiles
+func remove_tiles_state(tiles: Array, state: TileState) -> void:
+	for tile in tiles:
+		if tile is Node3D:
+			_remove_tile_state(tile, state)
+
+## Limpia todos los tiles de un estado específico
+func clear_state(state: TileState) -> void:
+	var tiles_to_clear = tiles_by_state[state].duplicate()
+	for tile in tiles_to_clear:
+		_remove_tile_state(tile, state)
+
+## Limpia todos los estados excepto selección y hover
+func clear_action_states() -> void:
+	for state in TileState.values():
+		if state != TileState.SELECTED and state != TileState.HOVERED and state != TileState.NORMAL:
+			clear_state(state)
+
+## ===== MÉTODOS DE ACCESO =====
+
+## Obtiene todos los tiles en un estado específico
+func get_tiles_by_state(state: TileState) -> Array:
+	return tiles_by_state[state].duplicate()
+
+## Obtiene el estado actual de un tile
+func get_tile_current_state(tile: Node3D) -> TileState:
+	if tile in tile_states:
+		return tile_states[tile].get("state", TileState.NORMAL)
+	return TileState.NORMAL
+
+## Verifica si un tile tiene un estado específico
+func has_tile_state(tile: Node3D, state: TileState) -> bool:
+	return tile in tiles_by_state[state]
+
+## Obtiene información completa de estados
+func get_tiles_info() -> Dictionary:
+	var info = {}
+	for state in TileState.values():
+		var state_name = TileState.keys()[state]
+		info[state_name] = {
+			"count": tiles_by_state[state].size(),
+			"tiles": tiles_by_state[state].duplicate()
+		}
+	return info
+
+## ===== MÉTODOS PRIVADOS =====
+
+## Establece estado interno de un tile
+func _set_tile_state(tile: Node3D, state: TileState, data: Dictionary = {}) -> void:
+	if not tile:
 		return
 	
+	# Remover de estado anterior si existe
+	if tile in tile_states:
+		var old_state = tile_states[tile]["state"]
+		tiles_by_state[old_state].erase(tile)
+	
+	# Establecer nuevo estado
+	tile_states[tile] = {
+		"state": state,
+		"data": data,
+		"timestamp": Time.get_ticks_msec()
+	}
+	
+	# Agregar a array de estado
+	if tile not in tiles_by_state[state]:
+		tiles_by_state[state].append(tile)
+	
+	# Aplicar efectos visuales
+	_apply_visual_state(tile, state)
+
+## Remueve estado de un tile
+func _remove_tile_state(tile: Node3D, state: TileState) -> void:
+	if not tile or not has_tile_state(tile, state):
+		return
+	
+	# Remover de estructuras de datos
+	tile_states.erase(tile)
+	tiles_by_state[state].erase(tile)
+	
+	# Restaurar a estado normal
+	_apply_visual_state(tile, TileState.NORMAL)
+
+## Aplica efectos visuales según el estado
+func _apply_visual_state(tile: Node3D, state: TileState) -> void:
+	if not tile or not tile.get_tree():
+		return
+	
+	var config = state_configs[state]
+	
+	# Animar escala
 	var tween = tile.get_tree().create_tween()
 	tween.set_ease(Tween.EASE_OUT)
 	tween.set_trans(Tween.TRANS_QUART)
-	tween.tween_property(tile, "scale", target_scale, animation_duration)
-
-## Alterna el estado de marcado de un tile.
-##
-## @param tile: Tile a alternar
-## @param animate: Si debe animarse el cambio
-func toggle_tile_mark(tile: Node3D, animate: bool = true) -> void:
-	if tile in marked_tiles:
-		unmark_tile(tile, animate)
-	else:
-		mark_tile(tile, highlight_scale, animate)
-
-## Selecciona un tile (diferente a marcado, para múltiples estados).
-##
-## @param tile: Tile a seleccionar
-## @param clear_previous: Si debe limpiar selecciones anteriores
-func select_tile(tile: Node3D, clear_previous: bool = true) -> void:
-	if clear_previous:
-		clear_selection()
+	tween.tween_property(tile, "scale", config["scale"], animation_duration)
 	
-	if tile not in selected_tiles:
-		selected_tiles.append(tile)
-		# Aplicar algún efecto visual de selección
-		_apply_selection_effect(tile)
+	# Aplicar modulación de color si el tile tiene el método
+	if tile.has_method("set_color_modulate"):
+		tile.set_color_modulate(config["color_modulate"])
+	
+	# Aplicar outline si es necesario
+	if config.get("outline", false) and tile.has_method("set_outline"):
+		tile.set_outline(true, config.get("outline_color", Color.WHITE))
+	elif tile.has_method("set_outline"):
+		tile.set_outline(false)
 
-## Deselecciona un tile.
-##
-## @param tile: Tile a deseleccionar
-func deselect_tile(tile: Node3D) -> void:
-	selected_tiles.erase(tile)
-	_remove_selection_effect(tile)
-
-## Limpia todas las selecciones.
-func clear_selection() -> void:
-	for tile in selected_tiles:
-		if tile and is_instance_valid(tile):
-			_remove_selection_effect(tile)
-	selected_tiles.clear()
-
-## Aplica efecto visual de selección.
-##
-## @param tile: Tile a aplicar efecto
-func _apply_selection_effect(tile: Node3D) -> void:
-	# Ejemplo: cambiar el color del material
-	if tile.has_method("set_selection_highlight"):
-		tile.set_selection_highlight(true)
-	# O cualquier otro efecto visual
-
-## Remueve efecto visual de selección.
-##
-## @param tile: Tile a remover efecto
-func _remove_selection_effect(tile: Node3D) -> void:
-	if tile.has_method("set_selection_highlight"):
-		tile.set_selection_highlight(false)
-
-## Obtiene todos los tiles marcados actualmente.
-##
-## @return: Array con tiles marcados
-func get_marked_tiles() -> Array:
-	return marked_tiles.duplicate()
-
-## Obtiene todos los tiles seleccionados actualmente.
-##
-## @return: Array con tiles seleccionados
-func get_selected_tiles() -> Array:
-	return selected_tiles.duplicate()
-
-## Verifica si un tile está marcado.
-##
-## @param tile: Tile a verificar
-## @return: true si está marcado
-func is_tile_marked(tile: Node3D) -> bool:
-	return tile in marked_tiles
-
-## Verifica si un tile está seleccionado.
-##
-## @param tile: Tile a verificar
-## @return: true si está seleccionado
-func is_tile_selected(tile: Node3D) -> bool:
-	return tile in selected_tiles
-
-## Limpia todo el estado del visualizador.
+## Limpia todo el estado del visualizador
 func clear_all() -> void:
-	clear_marks(false)
+	# Limpiar selección
 	clear_selection()
-	hovered_tile = null
+	
+	# Limpiar hover
+	if hovered_tile:
+		_remove_tile_state(hovered_tile, TileState.HOVERED)
+		hovered_tile = null
+	
+	# Limpiar todos los estados
+	for state in TileState.values():
+		clear_state(state)
+	
+	# Limpiar estructuras de datos
+	tile_states.clear()
+	_initialize_state_arrays()
