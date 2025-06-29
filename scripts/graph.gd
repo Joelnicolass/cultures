@@ -160,6 +160,7 @@ func get_neighbors_by_type(node_id, tile_type) -> Array:
 
 # Realiza BFS filtrando por tipo de tile. Retorna array de node_ids.
 func bfs_by_type(start_id, tile_type) -> Array:
+	# BFS en todo el grafo, recolectando solo los nodos del tipo dado
 	var visited = {}
 	var queue = [start_id]
 	var result = []
@@ -168,10 +169,12 @@ func bfs_by_type(start_id, tile_type) -> Array:
 		if visited.has(current):
 			continue
 		visited[current] = true
-		var data = get_node_data(current)
-		if data.has("type") and data["type"] == tile_type:
+		var current_type = get_tile_type(current)
+		# Si el nodo actual coincide en tipo, lo agregamos
+		if current_type == tile_type:
 			result.append(current)
-			for neighbor_id in get_neighbors_ids(current):
-				if not visited.has(neighbor_id):
-					queue.append(neighbor_id)
+		# Encolar todos los vecinos sin filtrar por tipo
+		for neighbor_id in get_neighbors_ids(current):
+			if not visited.has(neighbor_id):
+				queue.append(neighbor_id)
 	return result

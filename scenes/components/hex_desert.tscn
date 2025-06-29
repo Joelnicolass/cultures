@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3 uid="uid://c5ih0mip38w7i"]
+
+[ext_resource type="PackedScene" uid="uid://uq7ejipslkr6" path="res://resources/blend_files/hex_tile_desert.blend" id="1_65a5c"]
+[ext_resource type="Script" uid="uid://dl64jhna7mrcn" path="res://scripts/tile.gd" id="1_heop4"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_heop4"]
+radius = 0.982624
+
+[node name="HexDesert" type="StaticBody3D"]
+script = ExtResource("1_heop4")
+type = 4
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48316, 0)
+shape = SubResource("SphereShape3D_heop4")
+
+[node name="Tile" parent="." instance=ExtResource("1_65a5c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.00743181, 0)

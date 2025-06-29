@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://dasm2crecigy4"]
+
+[ext_resource type="PackedScene" uid="uid://psyo3o5qxjbt" path="res://resources/blend_files/hex_tile_forest.blend" id="1_sy8bk"]
+[ext_resource type="Script" uid="uid://dl64jhna7mrcn" path="res://scripts/tile.gd" id="1_y8wcn"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_y8wcn"]
+radius = 0.982624
+
+[node name="HexForest" type="StaticBody3D"]
+script = ExtResource("1_y8wcn")
+type = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.478279, 0)
+shape = SubResource("SphereShape3D_y8wcn")
+
+[node name="Tile" parent="." instance=ExtResource("1_sy8bk")]
