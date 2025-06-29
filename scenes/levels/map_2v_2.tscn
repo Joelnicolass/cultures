@@ -1,6 +1,7 @@
-[gd_scene load_steps=6 format=3 uid="uid://bwrg4bsb3pdl"]
+[gd_scene load_steps=7 format=3 uid="uid://bwrg4bsb3pdl"]
 
 [ext_resource type="Script" uid="uid://3urxg7qadvid" path="res://scripts/map_2v_2.gd" id="1_1wtle"]
+[ext_resource type="PackedScene" uid="uid://b6r2tstrp4erq" path="res://scenes/components/unit/unit.tscn" id="3_hesge"]
 [ext_resource type="PackedScene" uid="uid://dlgsf3fje6ui4" path="res://scenes/components/tile_game/tile_game.tscn" id="7_1wtle"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1wtle"]
@@ -55,3 +56,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.75637, 0, 0)
 [node name="TileGame7" parent="Grid" instance=ExtResource("7_1wtle")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.855474, 0, -1.52302)
 type = 1
+
+[node name="Unit" parent="Grid" instance=ExtResource("3_hesge")]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, -1.78842, 0.880201, -0.00419962)

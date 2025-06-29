@@ -57,23 +57,33 @@ func _handle_tile_click(mouse_position: Vector2) -> void:
 	var clicked_tile = _get_tile_at_position(mouse_position)
 	if clicked_tile:
 		tile_clicked.emit(clicked_tile)
+		# marcar el tile como seleccionado
+		select_tile(clicked_tile)
 
 ## Maneja el hover sobre tiles usando raycast.
 ##
 ## @param mouse_position: Posición del mouse en pantalla
 func _handle_tile_hover(mouse_position: Vector2) -> void:
 	var hovered = _get_tile_at_position(mouse_position)
+
+	# Si el tile actual es el mismo que el selected, no hacer nada
+	if hovered and hovered in selected_tiles:
+		return
 	
 	# Si cambió el tile sobre el que está el mouse
 	if hovered != hovered_tile:
 		# Desmarcar tile anterior
 		if hovered_tile:
 			tile_unhovered.emit(hovered_tile)
+			# animar
+			_animate_tile_scale(hovered_tile, normal_scale)
 		
 		# Marcar nuevo tile
 		hovered_tile = hovered
 		if hovered_tile:
 			tile_hovered.emit(hovered_tile)
+			# animar
+			_animate_tile_scale(hovered_tile, highlight_scale)
 
 ## Obtiene el tile en una posición específica de la pantalla usando raycast.
 ##

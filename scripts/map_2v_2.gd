@@ -41,7 +41,7 @@ func _ready():
 	print("MapManager y GameActionManager configurados")
 	print("Modo de juego inicial: ", game_action_manager.current_game_mode)
 
-## Maneja cuando se selecciona un tile (nueva funcionalidad)
+## Maneja cuando se selecciona un tile
 func _on_tile_selection_changed(tile_id: String, tile_data: Dictionary) -> void:
 	print("=== TILE SELECCIONADO ===")
 	print("ID: ", tile_id)
