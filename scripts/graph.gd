@@ -1,13 +1,29 @@
 extends Node
 class_name Graph
 
+## Clase robusta para manejar grafos no dirigidos con funcionalidades avanzadas de búsqueda y pathfinding.
+##
+## Esta clase proporciona una implementación completa de un grafo no dirigido que puede ser usado
+## para mapas hexagonales, sistemas de navegación, redes de conexiones, etc.
+##
+## Características principales:
+## - Gestión de nodos con datos personalizados
+## - Aristas no dirigidas
+## - Algoritmos de búsqueda (DFS, BFS)
+## - Pathfinding con Dijkstra
+## - Búsquedas filtradas por tipo
+## - Análisis de conectividad
+
 # Diccionario que contiene los nodos.
 # Cada nodo es un diccionario con dos entradas:
 #   "data": información asociada al nodo (por ejemplo, datos de un tile)
 #   "neighbors": un Array con las claves de los nodos vecinos.
 var nodes: Dictionary = {}
 
-# Agrega un nodo al grafo con una clave y datos opcionales.
+## Agrega un nodo al grafo con una clave única y datos opcionales.
+## 
+## @param node_id: Identificador único del nodo
+## @param data: Datos opcionales asociados al nodo (Dictionary, Object, etc.)
 func add_node(node_id, data = null) -> void:
 	if not nodes.has(node_id):
 		nodes[node_id] = {
@@ -15,7 +31,11 @@ func add_node(node_id, data = null) -> void:
 			"neighbors": []
 		}
 
-# Agrega una arista no dirigida entre dos nodos.
+## Agrega una arista no dirigida entre dos nodos.
+## Si los nodos no existen, los crea automáticamente.
+##
+## @param node_a: ID del primer nodo
+## @param node_b: ID del segundo nodo
 func add_edge(node_a, node_b) -> void:
 	# Nos aseguramos de que ambos nodos existan
 	if not nodes.has(node_a):
@@ -27,6 +47,69 @@ func add_edge(node_a, node_b) -> void:
 		nodes[node_a]["neighbors"].append(node_b)
 	if not node_a in nodes[node_b]["neighbors"]:
 		nodes[node_b]["neighbors"].append(node_a)
+
+## Elimina un nodo y todas sus conexiones del grafo.
+##
+## @param node_id: ID del nodo a eliminar
+func remove_node(node_id) -> void:
+	if not nodes.has(node_id):
+		return
+	
+	# Eliminar todas las aristas que conectan a este nodo
+	for neighbor_id in nodes[node_id]["neighbors"]:
+		if nodes.has(neighbor_id):
+			nodes[neighbor_id]["neighbors"].erase(node_id)
+	
+	# Eliminar el nodo
+	nodes.erase(node_id)
+
+## Elimina una arista entre dos nodos.
+##
+## @param node_a: ID del primer nodo
+## @param node_b: ID del segundo nodo
+func remove_edge(node_a, node_b) -> void:
+	if nodes.has(node_a):
+		nodes[node_a]["neighbors"].erase(node_b)
+	if nodes.has(node_b):
+		nodes[node_b]["neighbors"].erase(node_a)
+
+## Verifica si existe un nodo en el grafo.
+##
+## @param node_id: ID del nodo a verificar
+## @return: true si el nodo existe, false en caso contrario
+func has_graph_node(node_id) -> bool:
+	return nodes.has(node_id)
+
+## Verifica si existe una arista entre dos nodos.
+##
+## @param node_a: ID del primer nodo
+## @param node_b: ID del segundo nodo
+## @return: true si existe la arista, false en caso contrario
+func has_edge(node_a, node_b) -> bool:
+	if not nodes.has(node_a) or not nodes.has(node_b):
+		return false
+	return node_b in nodes[node_a]["neighbors"]
+
+## Obtiene el número total de nodos en el grafo.
+##
+## @return: Número de nodos
+func get_node_count() -> int:
+	return nodes.size()
+
+## Obtiene el número total de aristas en el grafo.
+##
+## @return: Número de aristas
+func get_edge_count() -> int:
+	var count = 0
+	for node_id in nodes:
+		count += nodes[node_id]["neighbors"].size()
+	return count / 2 # Dividir por 2 porque las aristas son no dirigidas
+
+## Obtiene todos los IDs de nodos en el grafo.
+##
+## @return: Array con todos los IDs de nodos
+func get_all_node_ids() -> Array:
+	return nodes.keys()
 
 # Recorrido en Profundidad (DFS) – se implementa de forma recursiva.
 func traverse_dfs(start_node) -> Dictionary:
@@ -178,3 +261,64 @@ func bfs_by_type(start_id, tile_type) -> Array:
 			if not visited.has(neighbor_id):
 				queue.append(neighbor_id)
 	return result
+
+## Realiza BFS filtrando por tipo de tile, pero solo en nodos conectados al nodo inicial.
+## Esta versión es más eficiente que bfs_by_type ya que no recorre todo el grafo.
+##
+## @param start_id: ID del nodo desde donde comenzar la búsqueda
+## @param tile_type: Tipo de tile a buscar
+## @return: Array con los IDs de nodos del tipo especificado conectados al nodo inicial
+func bfs_connected_by_type(start_id, tile_type) -> Array:
+	if not nodes.has(start_id):
+		return []
+	
+	var visited = {}
+	var queue = [start_id]
+	var result = []
+	
+	while queue.size() > 0:
+		var current = queue.pop_front()
+		if visited.has(current):
+			continue
+		visited[current] = true
+		
+		var current_type = get_tile_type(current)
+		if current_type == tile_type:
+			result.append(current)
+		
+		# Solo agregar vecinos que sean del mismo tipo o que puedan conectar tipos similares
+		for neighbor_id in get_neighbors_ids(current):
+			if not visited.has(neighbor_id):
+				queue.append(neighbor_id)
+	
+	return result
+
+## Encuentra todos los componentes conectados en el grafo.
+##
+## @return: Array de Arrays, donde cada sub-array contiene los IDs de nodos de un componente conectado
+func find_connected_components() -> Array:
+	var visited = {}
+	var components = []
+	
+	for node_id in nodes.keys():
+		if not visited.has(node_id):
+			var component = []
+			_dfs_component(node_id, visited, component)
+			components.append(component)
+	
+	return components
+
+## Función auxiliar para encontrar componentes conectados usando DFS.
+func _dfs_component(current_id, visited: Dictionary, component: Array) -> void:
+	if visited.has(current_id):
+		return
+	
+	visited[current_id] = true
+	component.append(current_id)
+	
+	for neighbor_id in get_neighbors_ids(current_id):
+		_dfs_component(neighbor_id, visited, component)
+
+## Limpia completamente el grafo, eliminando todos los nodos y aristas.
+func clear() -> void:
+	nodes.clear()

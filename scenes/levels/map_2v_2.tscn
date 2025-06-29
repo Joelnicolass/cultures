@@ -32,6 +32,7 @@ environment = SubResource("Environment_3ki5r")
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.706366, 0.707847, 0, -0.707847, 0.706366, -0.726038, 4.81045, 2.98665)
+current = true
 
 [node name="Grid" type="Node3D" parent="."]
 
