@@ -53,6 +53,7 @@ enum BIOME_TYPE {
 @export var neighbor_max_distance: float = 2.1
 
 ## Referencias a recursos de tiles
+# TODO -> CAMBIAR ESTO POR LAS SCENAS DE TILES - EL BLEND ERA SOLO PARA PRUEBAS, NO TIENE FUNCIONALIDAD MAS ALLA DE LA MALLA 3D
 const SCENE_FOR_TILE_TYPE = {
 	BIOME_TYPE.BASE: preload("res://resources/blend_files/hex_tile_base.blend"),
 	BIOME_TYPE.GRASS: preload("res://resources/blend_files/hex_tile_grass.blend"),
