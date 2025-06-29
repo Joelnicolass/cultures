@@ -53,14 +53,15 @@ enum BIOME_TYPE {
 @export var neighbor_max_distance: float = 2.1
 
 ## Referencias a recursos de tiles
-# TODO -> CAMBIAR ESTO POR LAS SCENAS DE TILES - EL BLEND ERA SOLO PARA PRUEBAS, NO TIENE FUNCIONALIDAD MAS ALLA DE LA MALLA 3D
+# Cambio a usar la escena TileGame en lugar de archivos .blend
+# TODO! -> CAMBIAR ESTA LOGICA
 const SCENE_FOR_TILE_TYPE = {
-	BIOME_TYPE.BASE: preload("res://resources/blend_files/hex_tile_base.blend"),
-	BIOME_TYPE.GRASS: preload("res://resources/blend_files/hex_tile_grass.blend"),
-	BIOME_TYPE.MOUNTAIN: preload("res://resources/blend_files/hex_tile_rock.blend"),
-	BIOME_TYPE.DESERT: preload("res://resources/blend_files/hex_tile_desert.blend"),
-	BIOME_TYPE.FOREST: preload("res://resources/blend_files/hex_tile_forest.blend"),
-	BIOME_TYPE.WATER: preload("res://resources/blend_files/hex_tile_water.blend"),
+	BIOME_TYPE.BASE: preload("res://scenes/components/tile_game/tile_game.tscn"),
+	BIOME_TYPE.GRASS: preload("res://scenes/components/tile_game/tile_game.tscn"),
+	BIOME_TYPE.MOUNTAIN: preload("res://scenes/components/tile_game/tile_game.tscn"),
+	BIOME_TYPE.DESERT: preload("res://scenes/components/tile_game/tile_game.tscn"),
+	BIOME_TYPE.FOREST: preload("res://scenes/components/tile_game/tile_game.tscn"),
+	BIOME_TYPE.WATER: preload("res://scenes/components/tile_game/tile_game.tscn"),
 }
 
 ## Componentes del sistema
@@ -144,8 +145,10 @@ func _generate_random_map() -> void:
 			var tile_pos = _calculate_hex_position(coord)
 			tile.global_transform.origin = tile_pos
 			
-			# Configurar tile
-			if tile.has_method('set_data'):
+			# Configurar tile con TileGame
+			if tile.has_method('set_biome_type'):
+				tile.set_biome_type(tile_data.type)
+			elif tile.has_method('set_data'):
 				tile.set_data(tile_data)
 			
 			# Establecer coordenadas hexagonales
@@ -202,20 +205,6 @@ func _load_existing_tiles() -> void:
 			if child.has_method("set_visible"):
 				child.visible = true
 			print("    - Hijo: ", child.name, " visible: ", child.visible if child.has_method("get_visible") else "N/A")
-		
-		# Asegurar que el tile tenga un tipo válido
-		if tile.name.contains("Base"):
-			tile.type = BIOME_TYPE.BASE
-		elif tile.name.contains("Grass"):
-			tile.type = BIOME_TYPE.GRASS
-		elif tile.name.contains("Rock"):
-			tile.type = BIOME_TYPE.MOUNTAIN
-		elif tile.name.contains("Desert"):
-			tile.type = BIOME_TYPE.DESERT
-		elif tile.name.contains("Forest"):
-			tile.type = BIOME_TYPE.FOREST
-		elif tile.name.contains("Water"):
-			tile.type = BIOME_TYPE.WATER
 		
 		# Calcular coordenadas si no las tiene o están en 0,0
 		if tile.q == 0 and tile.r == 0 and tile.name != "HexGrass": # HexGrass está en el origen
@@ -337,7 +326,7 @@ func clear_map() -> void:
 	# Eliminar tiles existentes
 	if grid_node:
 		for child in grid_node.get_children():
-			if child is Tile:
+			if child is Tile or child is TileGame:
 				child.queue_free()
 	
 	is_map_ready = false
@@ -346,6 +335,7 @@ func clear_map() -> void:
 ## Solo se encarga de identificar el tile y emitir las señales apropiadas.
 ## La lógica específica de qué hacer se maneja en otros scripts.
 func _on_tile_clicked(tile, click_type: String = "left_click") -> void:
+	print("Tile clickeado: ", tile.name, " tipo: ", click_type)
 	if not is_map_ready:
 		return
 	
@@ -506,22 +496,26 @@ func _find_tiles_recursive_internal(node: Node, tiles_array: Array) -> void:
 		# Verificar si es un tile usando diferentes métodos
 		var is_tile = false
 		
-		# Método 1: Verificar si tiene el script tile.gd (es la forma más confiable)
-		if child.get_script() != null:
-			var script_path = child.get_script().get_path()
-			if "tile.gd" in script_path:
-				is_tile = true
-		
-		# Método 2: Verificar si es de la clase Tile
-		if child is Tile:
+		# Método 1: Verificar si es de la clase TileGame
+		if child is TileGame:
 			is_tile = true
 		
-		# Método 3: Verificar si tiene las propiedades esperadas de un tile
+		# Método 2: Verificar si es de la clase Tile (compatibilidad)
+		elif child is Tile:
+			is_tile = true
+		
+		# Método 3: Verificar si tiene el script tile_game.gd
+		elif child.get_script() != null:
+			var script_path = child.get_script().get_path()
+			if "tile_game.gd" in script_path or "tile.gd" in script_path:
+				is_tile = true
+		
+		# Método 4: Verificar si tiene las propiedades esperadas de un tile
 		elif child.has_method("get") and child.get("q") != null and child.get("r") != null and child.get("type") != null:
 			is_tile = true
 		
-		# Método 4: Verificar por nombre del nodo (contiene "Hex")
-		elif "Hex" in child.name:
+		# Método 5: Verificar por nombre del nodo (contiene "Hex" o "Tile")
+		elif "Hex" in child.name or "Tile" in child.name:
 			is_tile = true
 		
 		if is_tile:

@@ -93,8 +93,10 @@ func _get_tile_at_position(screen_position: Vector2):
 	params.collision_mask = collision_mask
 	
 	var result = space.intersect_ray(params)
-	if result and result.collider and result.collider is Tile:
-		return result.collider
+	if result and result.collider:
+		# Verificar si es un tile válido (TileGame o Tile)
+		if result.collider is TileGame or result.collider is Tile:
+			return result.collider
 	
 	return null
 
