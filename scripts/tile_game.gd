@@ -1,66 +1,62 @@
-@tool
 extends StaticBody3D
 class_name TileGame
+
+## Tile básico para el sistema hexagonal
+##
+## Funcionalidades actuales:
+## - Tipos de bioma básicos
+## - Gestión de unidades desde editor
+## - Integración con EntityManager
 
 @onready var collider: CollisionShape3D = $CollisionShape3D
 
 
 enum BIOME_TYPE {
-	BASE, # terreno base
-	FOREST, # terreno de bosuqe
-	MOUNTAIN, # terreno de montaña
-	WATER, # terreno de agua
-	DESERT, # terreno de desierto
-	GRASS, # terreno de pastizal
+	BASE,
+	FOREST,
+	MOUNTAIN,
+	WATER,
+	DESERT,
+	GRASS,
 }
 
-## Propiedades del tile que se usan para creación del grafo
+## Propiedades del tile
 @export var q: int = 0
 @export var r: int = 0
-
-## Tipo de bioma del tile -> usado para definir el tipo de terreno que se debe mostrar
-# -- SE PUEDE USAR EN EL EDITOR -- #
 @export var type: BIOME_TYPE:
 	set(value):
 		type = value
 		_show_mesh_by_type(value)
 
+## Unidades colocadas desde el editor
+@export var editor_units: Array[Node] = []
 
-@export var MAX_BUILDINGS: int = 5 # cantidad máxima de edificios que se pueden construir en el tile
-@export var buildings: Array = [] # lista de edificios construidos dentro del tile
-@export var MAX_UNITS_IN_TILE: int = 5 # cantidad máxima de unidades que se pueden tener en el tile
-@export var units: Array = [] # lista de unidades que se encuentran en el tile
-
-
-### FUNCIONES DE ENGINE ###
+## Límites básicos
+const MAX_UNITS_IN_TILE = 4
 
 func _ready():
-	# mostrar el mesh correspondiente al tipo de bioma
 	_show_mesh_by_type(type)
 
+## Obtiene unidades del editor para sincronización con EntityManager
+func get_entities_from_editor() -> Array:
+	return editor_units.duplicate()
 
-### FUNCIONES PÚBLICAS ###
-## Setear el tipo de bioma del tile y mostrar el mesh correspondiente
-## @param biome_type: Tipo de bioma a establecer
-func set_biome_type(biome_type: BIOME_TYPE) -> void:
-	type = biome_type
-	_show_mesh_by_type(biome_type)
+## Verifica si el tile puede aceptar más unidades
+func can_accept_unit() -> bool:
+	return editor_units.size() < MAX_UNITS_IN_TILE
 
+## Limpia las referencias del editor (usado después de sincronización)
+func clear_editor_entities() -> void:
+	editor_units.clear()
 
-### FUNCIONES PRIVADAS ###
-
-## Muestra el mesh correspondiente al tipo de bioma del tile
-## @param biome_type
+## Muestra el mesh correspondiente al tipo de bioma
 func _show_mesh_by_type(biome_type: BIOME_TYPE) -> void:
 	var meshes = get_node("Meshes")
 	if not meshes:
-		print("No se encontró el nodo 'Meshes'. Asegúrate de que existe en la jerarquía del tile.")
 		return
 		
 	for mesh in meshes.get_children():
 		mesh.visible = false
-
-	print("Mostrando mesh para tipo de bioma: ", biome_type)
 	
 	match biome_type:
 		BIOME_TYPE.BASE:
@@ -75,6 +71,3 @@ func _show_mesh_by_type(biome_type: BIOME_TYPE) -> void:
 			meshes.get_node("Desert").visible = true
 		BIOME_TYPE.GRASS:
 			meshes.get_node("Grass").visible = true
-		_:
-			print("Tipo de bioma desconocido: ", biome_type)
-			return

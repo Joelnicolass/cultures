@@ -510,7 +510,7 @@ func _find_tiles_recursive_internal(node: Node, tiles_array: Array) -> void:
 		elif child.has_method("get") and child.get("q") != null and child.get("r") != null and child.get("type") != null:
 			is_tile = true
 		
-		# Método 4: Verificar por nombre del nodo (contiene "Hex" o "Tile")
+		# Método 4: Verificar por nombre del nodo ("Tile")
 		elif "Tile" in child.name:
 			is_tile = true
 		

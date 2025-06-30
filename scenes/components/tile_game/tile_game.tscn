@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://dlgsf3fje6ui4"]
+[gd_scene load_steps=15 format=3 uid="uid://dlgsf3fje6ui4"]
 
 [ext_resource type="Script" uid="uid://o3yos7iybpbq" path="res://scripts/tile_game.gd" id="1_ov7hn"]
 [ext_resource type="PackedScene" uid="uid://btw7b377s0n7i" path="res://resources/blend_files/hex_tile_base.blend" id="1_u6tuk"]
@@ -7,9 +7,28 @@
 [ext_resource type="PackedScene" uid="uid://bjf0cccdytvt5" path="res://resources/blend_files/hex_tile_grass.blend" id="4_a8y5j"]
 [ext_resource type="PackedScene" uid="uid://dntyrnqefu0vk" path="res://resources/blend_files/hex_tile_rock.blend" id="5_efkls"]
 [ext_resource type="PackedScene" uid="uid://hspadjlcrmbj" path="res://resources/blend_files/hex_tile_water.blend" id="6_ww5nq"]
+[ext_resource type="ArrayMesh" uid="uid://cbndvudxlioh5" path="res://resources/blend_files/hex_tile_base_Circle.res" id="8_j3w6u"]
+[ext_resource type="Shader" uid="uid://d252c3n3joukx" path="res://shaders/highlight.gdshader" id="9_a8y5j"]
+[ext_resource type="Texture2D" uid="uid://bvycawht30otp" path="res://resources/blend_files/hex_tile_base_Black_Galaxy_Granite_thflcb3v_1K_Roughness.jpg" id="10_efkls"]
+[ext_resource type="Shader" uid="uid://bomu2foliovog" path="res://shaders/outline.gdshader" id="11_ww5nq"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_5400n"]
 radius = 0.928537
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ww5nq"]
+render_priority = 0
+shader = ExtResource("9_a8y5j")
+shader_parameter/highlight_color = Color(1, 1, 0, 1)
+shader_parameter/highlight_power = 10.0
+shader_parameter/highlight_intensity = 1.0
+shader_parameter/rim_power = 4.5
+shader_parameter/texture_albedo = ExtResource("10_efkls")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_5400n"]
+render_priority = 0
+shader = ExtResource("11_ww5nq")
+shader_parameter/color = Color(0, 0, 0, 1)
+shader_parameter/thickness = 0.05
 
 [node name="TileGame" type="StaticBody3D"]
 script = ExtResource("1_ov7hn")
@@ -37,3 +56,17 @@ visible = false
 
 [node name="Water" parent="Meshes" instance=ExtResource("6_ww5nq")]
 visible = false
+
+[node name="Effects" type="Node3D" parent="."]
+
+[node name="Highlight" type="MeshInstance3D" parent="Effects"]
+transform = Transform3D(-1.01, -1.52506e-07, 0, 1.52506e-07, -1.01, 0, 0, 0, 1.01, 0, 1.03933, 0)
+visible = false
+mesh = ExtResource("8_j3w6u")
+skeleton = NodePath("../..")
+surface_material_override/0 = SubResource("ShaderMaterial_ww5nq")
+
+[node name="Outline" type="MeshInstance3D" parent="Effects"]
+visible = false
+mesh = ExtResource("8_j3w6u")
+surface_material_override/0 = SubResource("ShaderMaterial_5400n")

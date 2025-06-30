@@ -34,59 +34,42 @@ var state_configs: Dictionary = {
 	TileState.NORMAL: {
 		"scale": Vector3(1.0, 1.0, 1.0),
 		"color_modulate": Color.WHITE,
-		"outline": false
 	},
 	TileState.SELECTED: {
 		"scale": Vector3(1.05, 1.15, 1.05),
 		"color_modulate": Color(1.2, 1.2, 0.8),
-		"outline": true,
-		"outline_color": Color.YELLOW
 	},
 	TileState.HOVERED: {
 		"scale": Vector3(1.02, 1.08, 1.02),
-		"color_modulate": Color(1.1, 1.1, 1.1),
-		"outline": false
+		"color_modulate": Color.YELLOW
 	},
 	TileState.MOVEMENT_RANGE: {
 		"scale": Vector3(1.0, 1.05, 1.0),
 		"color_modulate": Color(0.8, 1.2, 0.8),
-		"outline": true,
-		"outline_color": Color.GREEN
 	},
 	TileState.ATTACK_RANGE: {
 		"scale": Vector3(1.0, 1.05, 1.0),
 		"color_modulate": Color(1.2, 0.8, 0.8),
-		"outline": true,
-		"outline_color": Color.RED
 	},
 	TileState.BUILD_AVAILABLE: {
 		"scale": Vector3(1.0, 1.05, 1.0),
 		"color_modulate": Color(0.9, 0.9, 1.2),
-		"outline": true,
-		"outline_color": Color.BLUE
 	},
 	TileState.RESOURCE_VIEW: {
 		"scale": Vector3(1.0, 1.03, 1.0),
 		"color_modulate": Color(1.3, 1.1, 0.7),
-		"outline": true,
-		"outline_color": Color.ORANGE
 	},
 	TileState.TRADE_ROUTE: {
 		"scale": Vector3(1.0, 1.02, 1.0),
 		"color_modulate": Color(1.0, 1.2, 1.3),
-		"outline": true,
-		"outline_color": Color.CYAN
 	},
 	TileState.BORDER: {
 		"scale": Vector3(1.0, 1.01, 1.0),
 		"color_modulate": Color(1.1, 0.9, 1.1),
-		"outline": true,
-		"outline_color": Color.MAGENTA
 	},
 	TileState.INVALID_ACTION: {
 		"scale": Vector3(0.98, 0.95, 0.98),
 		"color_modulate": Color(0.7, 0.7, 0.7),
-		"outline": false
 	}
 }
 
@@ -306,15 +289,18 @@ func _apply_visual_state(tile: Node3D, state: TileState) -> void:
 	tween.set_trans(Tween.TRANS_QUART)
 	tween.tween_property(tile, "scale", config["scale"], animation_duration)
 	
-	# Aplicar modulación de color si el tile tiene el método
-	if tile.has_method("set_color_modulate"):
-		tile.set_color_modulate(config["color_modulate"])
-	
-	# Aplicar outline si es necesario
-	if config.get("outline", false) and tile.has_method("set_outline"):
-		tile.set_outline(true, config.get("outline_color", Color.WHITE))
-	elif tile.has_method("set_outline"):
-		tile.set_outline(false)
+	# Modificar color -> APLICAR SHADERS (futuro)
+	var highlight_effect: MeshInstance3D = tile.get_node("Effects/Highlight")
+	# crear nuevo material en base al existente para evitar errores de referencia
+	var new_material = highlight_effect.get_surface_override_material(0).duplicate()
+	new_material.set_shader_parameter("highlight_color", config["color_modulate"])
+	highlight_effect.set_surface_override_material(0, new_material)
+
+	if state == TileState.NORMAL:
+		highlight_effect.visible = false
+	else:
+		highlight_effect.visible = true
+		
 
 ## Limpia todo el estado del visualizador
 func clear_all() -> void:

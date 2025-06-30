@@ -1,10 +1,15 @@
-[gd_scene load_steps=3 format=3 uid="uid://b6r2tstrp4erq"]
+[gd_scene load_steps=4 format=3 uid="uid://b6r2tstrp4erq"]
+
+[ext_resource type="Script" uid="uid://cssnrn4qrx2e" path="res://scripts/unit.gd" id="1_cx84b"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_pqwen"]
+radius = 0.668529
+height = 2.37396
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_cx84b"]
 
 [node name="Unit" type="StaticBody3D"]
+script = ExtResource("1_cx84b")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.995377, 0)

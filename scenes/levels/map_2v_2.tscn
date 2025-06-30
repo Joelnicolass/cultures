@@ -40,9 +40,10 @@ type = 2
 [node name="TileGame2" parent="Grid" instance=ExtResource("7_1wtle")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.73685, 0, -3.02769)
 
-[node name="TileGame3" parent="Grid" instance=ExtResource("7_1wtle")]
+[node name="TileGame3" parent="Grid" node_paths=PackedStringArray("editor_units") instance=ExtResource("7_1wtle")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.891877, 0, -1.53348)
 type = 5
+editor_units = [NodePath("../Unit")]
 
 [node name="TileGame4" parent="Grid" instance=ExtResource("7_1wtle")]
 type = 4
@@ -58,4 +59,4 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.855474, 0, -1.52302)
 type = 1
 
 [node name="Unit" parent="Grid" instance=ExtResource("3_hesge")]
-transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, -1.78842, 0.880201, -0.00419962)
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.913728, 0.880201, -1.4953)
