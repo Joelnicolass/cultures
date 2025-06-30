@@ -12,14 +12,6 @@ signal entity_added(entity_id: String, entity_data: Dictionary)
 signal entity_removed(entity_id: String, entity_data: Dictionary)
 signal entity_moved(entity_id: String, from_tile: String, to_tile: String)
 
-## Tipos de unidades básicas
-enum UnitType {
-	WARRIOR,
-	ARCHER,
-	SCOUT,
-	SETTLER,
-	WORKER
-}
 
 ## Estructura central de datos
 ## entity_id -> { type, subtype, tile_id, player_id, data, node }
@@ -47,7 +39,7 @@ func initialize(map_mgr: MapManager) -> void:
 ## ===== API PÚBLICA - CREACIÓN DE UNIDADES =====
 
 ## Crea una nueva unidad
-func create_unit(unit_type: UnitType, tile_id: String, player_id: int) -> String:
+func create_unit(unit_type: Constants.UnitType, tile_id: String, player_id: int) -> String:
 	var entity_id = _generate_entity_id("unit")
 	
 	var entity_info = {
@@ -69,7 +61,7 @@ func register_entity(entity_node: Node, tile_id: String, player_id: int = 1) -> 
 	var entity_id = _generate_entity_id("registered")
 	
 	# Determinar tipo basado en el nodo
-	var subtype = UnitType.WARRIOR
+	var subtype = Constants.UnitType.INFANTRY
 	if entity_node.has_method("get_unit_type"):
 		subtype = entity_node.get_unit_type()
 	

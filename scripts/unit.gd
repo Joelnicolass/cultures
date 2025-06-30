@@ -11,7 +11,7 @@ class_name Unit
 signal unit_health_changed(unit: Unit, old_health: int, new_health: int)
 
 ## Propiedades básicas
-@export var unit_type: EntityManager.UnitType = EntityManager.UnitType.WARRIOR
+@export var unit_type: Constants.UnitType = Constants.UnitType.INFANTRY
 @export var player_id: int = 1
 @export var max_health: int = 100
 @export var movement_points: int = 2
@@ -79,7 +79,7 @@ func _setup_visual_components():
 ## ===== API PARA ENTITY MANAGER =====
 
 ## Obtiene el tipo de unidad
-func get_unit_type() -> EntityManager.UnitType:
+func get_unit_type() -> Constants.UnitType:
 	return unit_type
 
 ## Establece el ID de entidad

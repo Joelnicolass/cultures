@@ -15,6 +15,8 @@ enum ResourceType {
 ## Unidades disponibles
 enum UnitType {
 	INFANTRY,
+    ARCHER, # Para expansion futura
+    PRIEST, # Para expansion futura
 	CAVALRY,
 	ELEPHANT,
 	LEADER,
