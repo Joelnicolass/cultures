@@ -14,3 +14,7 @@ config/name="cultures"
 run/main_scene="uid://bwrg4bsb3pdl"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+Constants="*res://globals/constants.gd"

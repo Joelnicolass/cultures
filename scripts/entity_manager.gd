@@ -129,17 +129,79 @@ func move_entity(entity_id: String, to_tile_id: String) -> bool:
 	# Actualizar datos de la entidad
 	entity.tile_id = to_tile_id
 	
-	# Mover nodo 3D si existe
+	# Mover nodo 3D si existe, con posicionamiento distribuido
 	if entity.node and map_manager:
 		var tile_node = map_manager.get_tile_node(to_tile_id)
 		if tile_node:
-			entity.node.global_transform.origin = tile_node.global_transform.origin + Vector3(0, 1, 0)
+			var position = _calculate_unit_position_in_tile(to_tile_id, entity_id)
+			entity.node.global_transform.origin = position
 	
 	# Emitir señal
 	entity_moved.emit(entity_id, from_tile_id, to_tile_id)
 	
 	print("Entidad movida: ", entity_id, " de ", from_tile_id, " a ", to_tile_id)
 	return true
+
+## Calcula la posición de una unidad específica dentro de un tile
+func _calculate_unit_position_in_tile(tile_id: String, entity_id: String) -> Vector3:
+	var tile_node = map_manager.get_tile_node(tile_id)
+	if not tile_node:
+		return Vector3.ZERO
+	
+	var base_position = tile_node.global_transform.origin + Vector3(0, 1, 0)
+	
+	# Obtener todas las unidades en el tile
+	var units_in_tile = get_units_in_tile(tile_id)
+	
+	# Si solo hay una unidad, usar posición central
+	if units_in_tile.size() <= 1:
+		return base_position
+	
+	# Encontrar el índice de esta unidad específica
+	var unit_index = -1
+	for i in range(units_in_tile.size()):
+		# Buscar por entity_id
+		for id in entities:
+			if entities[id] == units_in_tile[i] and id == entity_id:
+				unit_index = i
+				break
+		if unit_index != -1:
+			break
+	
+	# Si no se encuentra, usar posición central
+	if unit_index == -1:
+		return base_position
+	
+	# Calcular offset básico según el número de unidades
+	var offset = _get_unit_offset(unit_index, units_in_tile.size())
+	return base_position + offset
+
+## Obtiene el offset para una unidad según su índice y total de unidades
+func _get_unit_offset(unit_index: int, total_units: int) -> Vector3:
+	match total_units:
+		1:
+			return Vector3.ZERO # Centro
+		2:
+			return Vector3(-0.5 + (unit_index * 1.0), 0, 0) # Lado a lado, más separadas
+		3:
+			match unit_index:
+				0: return Vector3(-0.5, 0, 0.3) # Izquierda
+				1: return Vector3(0.5, 0, 0.3) # Derecha
+				2: return Vector3(0, 0, -0.5) # Atrás
+		4:
+			match unit_index:
+				0: return Vector3(-0.5, 0, 0.5) # Izquierda adelante
+				1: return Vector3(0.5, 0, 0.5) # Derecha adelante
+				2: return Vector3(-0.5, 0, -0.5) # Izquierda atrás
+				3: return Vector3(0.5, 0, -0.5) # Derecha atrás
+		_:
+			# Para más de 4 unidades, distribución circular con mayor radio
+			var angle = (unit_index * 2.0 * PI) / total_units
+			var radius = 0.6
+			return Vector3(cos(angle) * radius, 0, sin(angle) * radius)
+	
+	# Valor por defecto si no coincide ningún caso
+	return Vector3.ZERO
 
 ## ===== MÉTODOS PRIVADOS =====
 
