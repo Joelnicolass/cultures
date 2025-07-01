@@ -157,8 +157,6 @@ var is_alive: bool = true  # Solo vivo/muerto (sin HP)
 - Muestra rango de movimiento visual
 - Click en tile vacío → Mueve unidades seleccionadas
 
-## 🚀 Próximos Pasos (Iteración Ordenada)
-
 ### Fase 1: Combate Básico
 
 1. Modo de combate
