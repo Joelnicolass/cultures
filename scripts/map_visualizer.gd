@@ -45,7 +45,7 @@ var state_configs: Dictionary = {
 	},
 	TileState.MOVEMENT_RANGE: {
 		"scale": Vector3(1.0, 1.05, 1.0),
-		"color_modulate": Color(0.8, 1.2, 0.8),
+		"color_modulate": Color.CORAL
 	},
 	TileState.ATTACK_RANGE: {
 		"scale": Vector3(1.0, 1.05, 1.0),

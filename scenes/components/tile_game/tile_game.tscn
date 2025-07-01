@@ -40,7 +40,6 @@ shape = SubResource("SphereShape3D_5400n")
 [node name="Meshes" type="Node3D" parent="."]
 
 [node name="Base" parent="Meshes" instance=ExtResource("1_u6tuk")]
-visible = false
 
 [node name="Desert" parent="Meshes" instance=ExtResource("2_ov7hn")]
 visible = false

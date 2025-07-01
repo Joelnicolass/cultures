@@ -123,3 +123,8 @@ func _is_valid_unit(unit_node) -> bool:
 	
 	# Verificar que tiene las propiedades/métodos esperados de una unidad
 	return unit_node.has_method("get_unit_type") or unit_node.has_method("get_entity_type")
+
+
+## Obtener maximo de unidades que se pueden colocar en el tile
+func get_max_units() -> int:
+	return MAX_UNITS_IN_TILE

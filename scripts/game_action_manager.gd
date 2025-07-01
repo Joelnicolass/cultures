@@ -95,14 +95,21 @@ func _show_movement_range(tile_id: String) -> void:
 	if not map_visualizer:
 		return
 	
-	# Obtener tiles vecinos (simplificado)
-	var movement_tiles = _get_nearby_tiles(tile_id, 3)
+	# Obtener tiles vecinos (simplificado) TODO -> MEJORAR ESTO
+	var movement_tiles = _get_nearby_tiles(tile_id, 1)
 	var valid_tiles = []
 	
 	for tile_data in movement_tiles:
+		# ignorar el tile actual - usar "node_id" en lugar de "id"
+		if tile_data["node_id"] == tile_id: continue
+		# Validar si el tile es transitable
+		var tile = tile_data["node"] as TileGame
+		if entity_manager.get_units_in_tile(tile_data["node_id"]).size() >= tile.get_max_units(): continue
+		# agregar tile
 		valid_tiles.append(tile_data["node"])
 	
 	# Aplicar estado visual
+	print("Rango de movimiento para unidades seleccionadas: ", valid_tiles.size(), " tiles")
 	map_visualizer.set_tiles_state(valid_tiles, MapVisualizer.TileState.MOVEMENT_RANGE)
 
 ## Ejecuta el movimiento de las unidades seleccionadas
