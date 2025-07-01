@@ -417,3 +417,27 @@ func get_node_ids_within_distance(start_node_id, max_distance: int) -> Array:
 				queue.append({"node_id": neighbor_id, "distance": new_distance})
 	
 	return result
+
+## Calcula la distancia más corta entre dos nodos.
+##
+## @param start_node_id: ID del nodo inicial
+## @param target_node_id: ID del nodo objetivo
+## @return: Distancia en número de pasos (hexágonos), o -1 si no hay camino
+func get_distance(start_node_id, target_node_id) -> int:
+	if not nodes.has(start_node_id) or not nodes.has(target_node_id):
+		return -1
+	
+	if start_node_id == target_node_id:
+		return 0
+	
+	var result = dijkstra(start_node_id, target_node_id)
+	var distances = result["distances"]
+	
+	if distances.has(target_node_id):
+		var distance = distances[target_node_id]
+		# Si la distancia es "infinita", no hay camino
+		if distance >= 1e9:
+			return -1
+		return int(distance)
+	
+	return -1

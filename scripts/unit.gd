@@ -8,19 +8,16 @@ class_name Unit
 ## - Integración con EntityManager
 ## - Estados básicos de unidad
 
-signal unit_health_changed(unit: Unit, old_health: int, new_health: int)
-
 ## Propiedades básicas
 @export var unit_type: Constants.UnitType = Constants.UnitType.INFANTRY
 @export var player_id: int = 1
-@export var max_health: int = 100
+
+## Propiedades simplificadas (juego estilo clash of cultures)
+@export var attack_range: int = 1
 @export var movement_points: int = 2
-@export var attack_power: int = 10
-@export var defense_power: int = 8
 @export var unit_color: Color = Color.BLUE
 
 ## Estado interno
-var current_health: int
 var current_movement: int
 var entity_id: String = ""
 var current_tile_id: String = ""
@@ -40,7 +37,6 @@ var collision_shape: CollisionShape3D
 
 func _ready():
 	# Inicializar propiedades
-	current_health = max_health
 	current_movement = movement_points
 	
 	# Configurar componentes visuales
@@ -100,37 +96,24 @@ func get_current_tile() -> String:
 
 ## ===== PROPIEDADES BÁSICAS =====
 
-## Obtiene la salud actual
-func get_health() -> int:
-	return current_health
-
 ## Obtiene puntos de movimiento actuales
 func get_movement() -> int:
 	return current_movement
-
-## Obtiene poder de ataque
-func get_attack() -> int:
-	return attack_power
-
-## Obtiene poder de defensa
-func get_defense() -> int:
-	return defense_power
 
 ## Obtiene ID del jugador
 func get_player_id() -> int:
 	return player_id
 
+## Obtiene el rango de ataque
+func get_attack_range() -> int:
+	return attack_range
+
 ## ===== ACCIONES BÁSICAS =====
 
 ## Inflige daño a la unidad
-func take_damage(damage: int) -> void:
-	var old_health = current_health
-	current_health = max(0, current_health - damage)
-	
-	unit_health_changed.emit(self, old_health, current_health)
-	
-	if current_health <= 0:
-		current_state = UnitState.DEAD
+func take_damage(_damage: int) -> void:
+	## En clash of cultures, si se recibe un impacto la unidad muere
+	current_state = UnitState.DEAD
 
 ## Restaura puntos de movimiento
 func restore_movement() -> void:

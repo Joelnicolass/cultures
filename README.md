@@ -1,6 +1,6 @@
 # Sistema de Mapas Hexagonales - Cultures
 
-Sistema básico de mapas hexagonales con unidades para juegos estilo Civilization desarrollado en Godot 4.
+Sistema básico de mapas hexagonales con unidades para juegos estilo **Clash of Cultures** (4X simplificado) desarrollado en Godot 4.
 
 ## 🎯 Filosofía de Desarrollo
 
@@ -20,16 +20,35 @@ Sistema básico de mapas hexagonales con unidades para juegos estilo Civilizatio
 - ✅ **Hacer**: Refactorizar cuando sea necesario, no antes
 - ✅ **Hacer**: Documentar decisiones arquitectónicas
 
-## 🏗️ Estado Actual (Versión Minimalista)
+## 🎮 Mecánicas Estilo Clash of Cultures
+
+### Simplificaciones Implementadas
+
+- **💥 Combate Simplificado**: 1 impacto = muerte (sin puntos de vida)
+- **🎯 Rango de Ataque**: Cada unidad tiene un rango específico para atacar
+- **👣 Puntos de Movimiento**: Sistema simple de movimiento por turnos
+- **⚔️ Tipos de Unidad**: 7 tipos con características específicas
+
+### Diferencias con Civilization
+
+| Aspecto        | Civilization             | Clash of Cultures   |
+| -------------- | ------------------------ | ------------------- |
+| **Salud**      | Puntos de vida complejos | 1 impacto = muerte  |
+| **Combate**    | Cálculos complejos       | Simple y directo    |
+| **Movimiento** | Sistema complejo         | Puntos por turno    |
+| **Unidades**   | Muchos tipos             | 7 tipos específicos |
+
+## 🏗️ Estado Actual (Versión Clash of Cultures)
 
 ### Funcionalidades Implementadas
 
 - ✅ **Mapa hexagonal básico** con diferentes biomas
-- ✅ **Sistema de unidades básico** (Warrior, Archer, Scout, Settler, Worker)
-- ✅ **Movimiento de unidades** entre tiles
+- ✅ **Sistema de unidades simplificado** (7 tipos disponibles)
+- ✅ **Movimiento con puntos** por turno
+- ✅ **Rango de ataque** específico por unidad
+- ✅ **Combate simplificado** (1 impacto = muerte)
 - ✅ **Dos modos de juego**: Exploración y Movimiento
 - ✅ **Gestión centralizada** a través de EntityManager
-- ✅ **Integración tile-unidad** desde editor
 
 ### Arquitectura Simplificada
 
@@ -44,11 +63,41 @@ Sistema básico de mapas hexagonales con unidades para juegos estilo Civilizatio
           ▼                                            ▼
 ┌─────────────────┐                    ┌─────────────────────────┐
 │ EntityManager   │                    │    Support Classes      │
-│ (Solo Unidades) │                    │ Graph │ HexGrid │ Utils │
+│ (Clash Style)   │                    │ Graph │ HexGrid │ Utils │
 └─────────────────┘                    └─────────────────────────┘
 ```
 
-## 📋 Clases Principales (Simplificadas)
+## ⚔️ Sistema de Unidades
+
+### Tipos Disponibles
+
+| Unidad       | Ataque | Movimiento | Rango | Características          |
+| ------------ | ------ | ---------- | ----- | ------------------------ |
+| **Infantry** | ⚔️     | 2          | 1     | Unidad básica de combate |
+| **Archer**   | 🏹     | 2          | 2     | Ataque a distancia       |
+| **Priest**   | ✨     | 2          | 1     | _Para expansión futura_  |
+| **Cavalry**  | 🐎     | 3          | 1     | Movimiento rápido        |
+| **Elephant** | 🐘     | 2          | 1     | Unidad pesada            |
+| **Leader**   | 👑     | 2          | 1     | Unidad especial          |
+| **Ship**     | ⛵     | 4          | 1     | Movimiento acuático      |
+
+### Propiedades Simplificadas
+
+```gdscript
+## Propiedades básicas
+@export var unit_type: Constants.UnitType = Constants.UnitType.INFANTRY
+@export var player_id: int = 1
+
+## Propiedades de combate (Clash of Cultures)
+@export var attack_range: int = 1        # Rango de ataque en tiles
+@export var movement_points: int = 2     # Movimiento por turno
+@export var unit_color: Color = Color.BLUE
+
+## Estado simplificado
+var is_alive: bool = true  # Solo vivo/muerto (sin HP)
+```
+
+## 📋 Clases Principales (Adaptadas)
 
 ### 🗺️ MapManager
 
@@ -64,12 +113,13 @@ Sistema básico de mapas hexagonales con unidades para juegos estilo Civilizatio
 - Coordinación entre sistemas
 - Manejo de selección de tiles
 
-### 👥 EntityManager
+### 👥 EntityManager (Adaptado a Clash of Cultures)
 
-- Gestión centralizada de unidades
-- Registro desde editor y runtime
-- Consultas por tile y jugador
-- Movimiento entre tiles
+- **Gestión centralizada** de unidades
+- **Combate simplificado**: `kill_unit()` (1 impacto = muerte)
+- **Consultas optimizadas**: Solo unidades vivas
+- **Rango de ataque**: `can_attack_tile()` basado en distancia
+- **Valores por defecto** específicos por tipo de unidad
 
 ### 🔷 TileGame
 
@@ -77,11 +127,12 @@ Sistema básico de mapas hexagonales con unidades para juegos estilo Civilizatio
 - Referencias a unidades del editor
 - Integración con EntityManager
 
-### 👤 Unit
+### 👤 Unit (Simplificado)
 
-- Propiedades básicas (salud, movimiento, ataque, defensa)
-- Estados simples (Idle, Moving, Dead)
-- Integración con EntityManager
+- **Propiedades básicas**: tipo, jugador, color
+- **Mecánicas Clash**: rango de ataque, puntos de movimiento
+- **Estados simples**: Idle, Moving, Dead
+- **Sin sistema de vida**: Muerte en 1 impacto
 
 ## 🎮 Controles Actuales
 
@@ -97,7 +148,7 @@ Sistema básico de mapas hexagonales con unidades para juegos estilo Civilizatio
 ### 1. Exploración (Modo por defecto)
 
 - Click en tile → Muestra información básica
-- Lista unidades presentes
+- Lista unidades presentes (solo vivas)
 - Sin funcionalidades complejas
 
 ### 2. Movimiento de Unidades
@@ -108,83 +159,154 @@ Sistema básico de mapas hexagonales con unidades para juegos estilo Civilizatio
 
 ## 🚀 Próximos Pasos (Iteración Ordenada)
 
-### Fase 1: Mejorar Movimiento Básico
+### Fase 1: Combate Básico
 
-1. Validaciones de movimiento (terreno, obstáculos)
-2. Costo de movimiento por tipo de terreno
-3. Animaciones básicas de movimiento
+1. Modo de combate
+2. Implementar ataques entre unidades
+3. Validaciones de rango de ataque
+4. Eliminación visual de unidades muertas
 
-### Fase 2: Mejoras de UX
+### Fase 2: Mecánicas de Turno
 
-1. Feedback visual mejorado
-2. Información de tile en pantalla
-3. Controles más intuitivos
+1. Sistema de turnos por jugador
+2. Consumo de puntos de movimiento
+3. Reinicio de movimiento por turno
 
-### Fase 3: Mecánicas Básicas
+### Fase 3: Mejoras de UX
 
-1. Puntos de movimiento por turno
-2. Sistema de turnos simple
-3. Múltiples jugadores básico
+1. Feedback visual para rangos de ataque
+2. Animaciones de combate básicas
+3. Información de unidades en pantalla
 
 ### Fase 4: Expansión Gradual
 
-1. Tipos de unidades específicos
-2. Combate básico
-3. Construcción simple
+1. Mecánicas específicas de Priest
+2. Terrenos con restricciones (agua para Ships)
+3. Habilidades especiales de Leader
 
-## 🧹 Limpieza Realizada
+## 🧹 Cambios Realizados (Simplificación Clash of Cultures)
 
-### Eliminado (Over-engineering)
+### ✅ **REFACTORING RECIENTE: Eliminación de Duplicación**
 
-- ❌ Sistema de buildings complejo
-- ❌ Modos de juego no utilizados (Combat, Diplomacy, Building)
-- ❌ Funciones de construcción prematuras
-- ❌ Sistema de recursos complejos
-- ❌ Árbol tecnológico (tech_tree.gd)
-- ❌ Funcionalidades "para futuro"
+**Problema Solucionado**: `EntityManager` duplicaba propiedades que ya existían en la clase `Unit`
+
+#### Antes (Problemático)
+
+- `EntityManager` tenía `_get_default_attack_range()` y `_get_default_movement_points()`
+- `Unit` tenía `attack_range` y `movement_points`
+- **Duplicación**: Dos fuentes de verdad para los mismos datos
+- **Inconsistencias**: Cambios en `Unit` no se reflejaban en `EntityManager`
+- **Escalabilidad limitada**: Modificadores tecnológicos imposibles
+
+#### Después (Corregido)
+
+- ✅ **Fuente única de verdad**: `Unit` define todas las propiedades
+- ✅ **Referencias directas**: `EntityManager` usa `unit.get_attack_range()` y `unit.movement_points`
+- ✅ **Encapsulamiento mejorado**: Cada clase tiene responsabilidades claras
+- ✅ **Preparado para expansión**: Parámetro `movement_modifier` para tecnologías futuras
+
+#### Métodos Mejorados
+
+```gdscript
+# EntityManager ahora usa Unit directamente
+func create_unit() -> String:
+    var unit_instance = Unit.new()  # Crear instancia real
+    # Usar propiedades de Unit directamente
+    "attack_range": unit_instance.get_attack_range(),
+    "movement_points": unit_instance.movement_points,
+    "node": unit_instance  # Referencia directa
+
+func move_entity(entity_id: String, to_tile_id: String, movement_modifier: int = 0):
+    # Usar métodos de Unit para validar y consumir movimiento
+    if unit.can_move() and unit.consume_movement(1):
+        # Lógica de movimiento...
+```
+
+### Eliminado (Complejidad Civilization)
+
+- ❌ Sistema de puntos de vida complejos
+- ❌ Cálculos de daño complejos
+- ❌ Múltiples stats por unidad (attack_power, defense_power, etc.)
+- ❌ Sistema de experiencia y mejoras
+- ❌ **Métodos duplicados**: `_get_default_attack_range()`, `_get_default_movement_points()`
+
+### Implementado (Estilo Clash of Cultures)
+
+- ✅ **Combate 1 impacto = muerte**
+- ✅ **Rango de ataque** específico por unidad
+- ✅ **Puntos de movimiento** simples
+- ✅ **7 tipos de unidad** con características específicas
+- ✅ **Estados simplificados** (vivo/muerto)
+- ✅ **Encapsulamiento mejorado**: Unit como fuente única de verdad
+- ✅ **Preparado para tecnologías**: Parámetros opcionales para modificadores
 
 ### Mantenido (Esencial)
 
 - ✅ Mapa hexagonal funcional
-- ✅ Unidades básicas
-- ✅ Movimiento simple
-- ✅ EntityManager simplificado
+- ✅ Movimiento entre tiles
+- ✅ EntityManager simplificado (ahora sin duplicación)
 - ✅ Dos modos de juego activos
 
-## 📁 Archivos Principales
+## 🔮 Preparación para Tecnologías
 
+### Sistema de Modificadores (Ya Implementado)
+
+El refactoring incluye preparación para el **árbol tecnológico**:
+
+```gdscript
+# Ejemplo de uso futuro
+func apply_technology_bonus(unit_id: String, movement_bonus: int):
+    entity_manager.move_entity(unit_id, target_tile, movement_bonus)
 ```
-scripts/
-├── map_manager.gd         # Gestión del mapa
-├── game_action_manager.gd # Lógica de juego básica
-├── entity_manager.gd      # Gestión de unidades
-├── tile_game.gd          # Tiles individuales
-├── unit.gd               # Unidades básicas
-├── map_2v_2.gd           # Script principal
-├── map_visualizer.gd     # Visualización
-├── graph.gd              # Sistema de grafo
-├── hex_grid.gd           # Cálculos hexagonales
-└── tile_utilities.gd     # Utilidades básicas
-```
+
+**Ventajas**:
+
+- ✅ No requiere cambios en `Unit` para tecnologías básicas
+- ✅ Modificadores se aplican en tiempo real
+- ✅ Compatible con sistema de turnos
+- ✅ Escalable para diferentes tipos de bonificaciones
 
 ## 📝 Notas de Desarrollo
 
-### Lecciones Aprendidas
+### Decisión: Refactoring Incremental vs Reescritura
 
-1. **Simplicidad primero**: Es mejor tener poco que funcione bien que mucho a medias
-2. **Iteración controlada**: Cada feature debe completarse antes de la siguiente
-3. **Refactoring oportuno**: Limpiar código cuando se vuelve complejo, no preventivamente
-4. **Documentación actualizada**: Mantener README alineado con la realidad del código
+**Elegido**: Refactoring incremental siguiendo los principios del README
+
+- **🎯 Una mejora a la vez**: Solo eliminar duplicación (Paso 1)
+- **📈 Escalabilidad**: Preparado para Paso 2 (mejorar referencias) y Paso 3 (modificadores)
+- **🧹 Código limpio**: EntityManager más simple y Unit más consistente
+- **🔄 Sin breaking changes**: API pública mantiene compatibilidad
+
+### Lecciones Aprendidas del Refactoring
+
+1. **Encapsulamiento**: Cada clase debe ser dueña de sus datos
+2. **Fuente única de verdad**: Evitar duplicación de propiedades críticas
+3. **Preparación gradual**: Cambios pequeños que facilitan expansión futura
+4. **Validación temprana**: Corregir errores de compilación inmediatamente
+
+### Próximos Refactorings Planeados
+
+#### Paso 2: Mejorar Referencias (Futuro cercano)
+
+- Cambiar algunos `Dictionary` por tipos específicos
+- Mantener compatibilidad con sistema actual
+- Mejorar IntelliSense y detección de errores
+
+#### Paso 3: Sistema de Modificadores (Futuro)
+
+- Implementar bonificaciones tecnológicas
+- Expandir parámetros opcionales
+- Sistema de efectos temporales
 
 ### Recordatorios
 
-- 🎯 **Foco**: Una funcionalidad a la vez
-- 🔍 **Validación**: Probar cada cambio antes de continuar
-- 📚 **Documentación**: Actualizar README con cada iteración importante
-- 🧪 **Experimentación**: Probar en small scale antes de implementar
+- 🎯 **Foco**: Una funcionalidad a la vez ✅ (Duplicación eliminada)
+- 🔍 **Validación**: Probar cada cambio antes de continuar ✅ (Sin errores)
+- 📚 **Documentación**: Actualizar README con cada iteración importante ✅ (Actualizado)
+- 🧪 **Experimentación**: Probar mecánicas simples antes de complejas ✅ (Base sólida)
 
 ---
 
-_Sistema simplificado para desarrollo iterativo_  
-_Versión: Minimalista v1.0_  
+_Sistema adaptado a mecánicas Clash of Cultures_  
+_Versión: Clash Style v1.1 (Refactoring EntityManager/Unit)_  
 _Godot 4.x_
